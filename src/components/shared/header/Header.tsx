@@ -30,7 +30,15 @@ function Header() {
     {
         name:"Contact Us",
         link:"/contact-us"
-    }
+    },
+    {
+      name:"My Bookings",
+      link:"/my-bookings"
+    },
+    {
+      name:"Bookings",
+      link:"/guide-dash"
+    } 
   ]
 
   if(pathname === '/auth') return null
@@ -56,9 +64,9 @@ function Header() {
             <Link
            
               href="/auth"
-              className="  bg-orange-600 border-2 border-gray-100 text-white transition-all hover:ring-4 hover:ring-[#43B97F] font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none"
+              className="  bg-orange-600 border-2 border-gray-100 text-white transition-all hover:ring-4 hover:ring-orange-400 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none"
               >
-              Login
+              Login / Signup
             </Link>
             <button
               onClick={toggleMenu}
@@ -106,7 +114,7 @@ function Header() {
                 <li key={index}>
                 <Link
                   href={item.link}
-                  className="block py-2 font-semibold pl-3 pr-4 text-black  rounded lg:bg-transparent lg:hover:text-emerald-600 lg:p-0 "
+                  className="block py-2 font-semibold pl-3 pr-4 text-black  rounded lg:bg-transparent lg:hover:text-orange-400 lg:p-0 "
                   aria-current="page"
                 >
 
