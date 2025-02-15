@@ -9,7 +9,7 @@ function page() {
    
   return (
     <div>
-      <HeroSection image={ASSETS.contact_banner} title="Contact Us" />
+      <HeroSection image={ASSETS.planner_banner} title="Contact Us" />
   
 
 

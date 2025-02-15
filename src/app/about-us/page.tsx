@@ -8,14 +8,10 @@ import Slider from '@/components/template/about/carosalAbout/AboutCarousal'
 import HeroSection from '@/components/template/heroSection/HeroSection'
 function page() {
   return (
-    <div>
-      <HeroSection image={ASSETS.about_banner} title="About Us"  />
-    
-      <Slider/>
+    <div className=' pb-11'>
+      <HeroSection image={ASSETS.blog_banner} title="About Us"  />
 <AboutTravelTrills/>
 <WhyUs/>
-<BestPlaces/>
-<LatestBlog/>
 
     </div>
   )

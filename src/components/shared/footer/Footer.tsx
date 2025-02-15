@@ -5,7 +5,7 @@ import {ASSETS} from '../../../../public/Assets'
 import NewsLetter from '@/components/template/home/subhome/NewsLetter'
 function Footer() {
   return (
-   <footer className="bg-gray-100">
+   <footer className="bg-gray-100 mt-20">
   <div className="max-w-screen-xl px-4 pt-8 pb-5 mx-auto sm:px-6 lg:px-8">
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
       <div>

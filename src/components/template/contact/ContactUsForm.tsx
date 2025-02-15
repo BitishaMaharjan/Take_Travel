@@ -31,9 +31,9 @@ function ContactUsForm() {
 
   return (
     <div className="w-full flex flex-col flex-wrap">
-      <h1 className="font-bold text-2xl my-3 md:text-4xl">Get in touch</h1>
+      <h1 className="font-bold text-2xl my-3 md:text-4xl">Contact Us</h1>
       <p>
-        Welcome to Travel Thrills, your ultimate gateway to the world’s most captivating destinations and unforgettable adventures. At Travel Thrills, we believe travel is more than just visiting new places; it&rsquo;s about experiencing the world in its most authentic and exhilarating forms. Whether you&rsquo;re a seasoned globetrotter or planning your first big adventure, we’re here to help you discover the wonders of our beautiful planet.
+      Welcome to Take Travel, your go-to source for exploring the world’s most exciting destinations and unforgettable experiences. At Take Travel, we see travel as more than just exploring new places; it’s about immersing yourself in the world’s most genuine and thrilling experiences. Whether you're an experienced traveler or gearing up for your first major journey, we’re here to guide you in uncovering the wonders of our amazing planet.
       </p>
       <form onSubmit={Formik.handleSubmit}>
         <div className='flex flex-col'>
@@ -51,7 +51,7 @@ function ContactUsForm() {
           <textarea onBlur={Formik.handleBlur} value={Formik.values.message} onChange={Formik.handleChange} name="message" id="message" className={`rounded-md border border-gray-300 p-2 ${Formik.errors.message && Formik.touched.message ? "border-red-400" : ""}`} rows={5}></textarea>
           {Formik.errors.message && Formik.touched.message ? <p className='text-red-500'>{Formik.errors.message}</p> : ""} 
         </div>
-        <button type='submit' className="mt-7 capitalize border-2 bg-[#43B97F] text-white transition-all hover:ring-4 hover:ring-[#43B97F] font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none">Send Now</button>
+        <button type='submit' className="mt-7 capitalize border-2 bg-orange-600 text-white transition-all hover:ring-4 hover:ring-orange-300 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none">Send Now</button>
       </form>
     </div>
   );

@@ -3,9 +3,9 @@ export const ASSETS = {
 
     video:'video/9222229-hd_1920_1080_24fps.mp4',
     logo:'/icon/logo.png',
-    whyus1:'/icon/time.png',
-    whyus2:'/icon/customer.png',
-    whyus3:'/icon/bi_shield-check.png',
+    customerservice:'/icon/customerservice.png',
+    gaurantee:'/icon/gaurantee.png',
+    booking:'/icon/booking.png',
     blog_banner:'/images/banner-blog.png',
     about_banner:'/images/banner-about.png',
     booking_banner:'/images/banner-book.png',
