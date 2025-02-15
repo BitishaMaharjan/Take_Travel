@@ -29,6 +29,7 @@
     "formik": "^2.4.6",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.378.0",
+    "motion": "^12.4.3",
     "next": "14.2.3",
     "next-themes": "^0.3.0",
     "react": "^18",
