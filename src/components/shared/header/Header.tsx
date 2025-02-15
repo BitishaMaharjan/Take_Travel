@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {ASSETS} from '../../../../public/Assets'
+import { link } from 'fs';
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -15,6 +16,10 @@ function Header() {
     {
         name:"Home",
         link:"/"
+    },
+    {
+      name:"Explore",
+      link: "/explore"
     },
     {
         name:"About",

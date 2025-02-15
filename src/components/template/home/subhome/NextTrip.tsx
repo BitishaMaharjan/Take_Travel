@@ -2,33 +2,34 @@ import React from 'react'
 import Image from 'next/image'
 import {ASSETS} from '../../../../../public/Assets' 
 function NextTrip() {
-    const bookingSteps=[
+    const bookingSteps = [
         {
-            image:ASSETS.booking1,
-            title:"Choose destination",
-            content:"Explore our curated list of destinations and select the perfect place for your next adventure. Whether it's a tropical beach or a bustling city, we have options for every traveler."
+            image: ASSETS.booking1,
+            title: "Pick Your Nepal Adventure",
+            content: "From the snow-capped Himalayas to lush jungles and ancient heritage sites, Nepal has it all. Choose a trekking route, cultural tour, or an off-the-beaten-path experience."
         },
         {
-            image:ASSETS.booking2,
-            title:"Make Payment",
-            content:"Secure your booking quickly and easily with our seamless payment process. Choose from various payment options to confirm your trip with confidence."
+            image: ASSETS.booking2,
+            title: "Book & Secure Your Trip",
+            content: "Easily confirm your adventure with flexible payment options, including digital wallets, bank transfers, or cash payments at partner locations."
         },
         {
-            image:ASSETS.booking3,
-            title:"Reach Air Port on selected date",
-            content:"On your travel date, head to the airport with your booking confirmation in hand. We'll handle the rest, ensuring a smooth start to your unforgettable journey."
+            image: ASSETS.booking3,
+            title: "Get Ready for the Experience",
+            content: "Prepare for your trip—pack essentials, check the weather, and meet your guide at the designated spot. Whether you're heading to Everest Base Camp or Pokhara’s lakeside, your journey begins now!"
         },
-    ]
+    ];
+    
   return (
-    <div className="w-full flex justify-center items-center">
-      <div className='w-11/12 flex flex-col lg:flex-row flex-wrap'>
+    <div className="w-auto flex justify-center items-center">
+      <div className='w-5/6 flex flex-col lg:flex-row flex-wrap'>
     <div className='w-full lg:w-6/12 flex flex-col my-4'>
 
     <h1
      data-aos="fade-up"
      data-aos-anchor-placement="top-bottom"
     className='text-2xl md:text-4xl font-bold my-4 md:mt-20'>
-    Book Your Next Trip in <br /> 3 Easy steps 
+     Plan Your Nepal Adventure in <br /> 3 Simple Steps
     </h1>
     {
         bookingSteps.map((item,index)=>(
@@ -51,13 +52,13 @@ function NextTrip() {
  
 
     </div>
-    <div className='w-full lg:w-6/12 flex items-center justify-center'>
+    <div className='w-full lg:w-6/12 flex items-center justify-center mt-7 pl-9'>
     <Image
         src={ASSETS.trip}
         alt='Book your next trip'
-        height={500}
+        height={1200}
         className='object-cover'
-        width={500}
+        width={800}
     ></Image>
     </div>
       </div>
