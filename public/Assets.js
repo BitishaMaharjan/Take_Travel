@@ -40,8 +40,9 @@ export const ASSETS = {
     itely:"https://media.cntraveler.com/photos/5f80927a7aefd0f473d5bd5e/master/w_1600%2Cc_limit/Tuscany-GettyImages-641205724.jpg",
     finland:"/image/finland.jpg",
     usa:"/image/joshua-tree-usa.webp",
-    kaung:"/image/kuang-si-falls.jpg",
-    itley:"/image/lake-como-italian-alke.jpg",
-    muchai:"/image/mu-cang-chai.jpg",
-    portugal:"/image/portugal.jpg",
+    album1:"/images/album1.jpg",
+    album2:"/images/album2.jpg",
+    album3:"/images/album3.jpg",
+    album4:"/images/album4.jpg",
+    album6:"/images/album6.jpg",
 }
