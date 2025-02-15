@@ -1,9 +1,15 @@
+'use client'
+
 import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import {ASSETS} from '../../../../public/Assets'
 import NewsLetter from '@/components/template/home/subhome/NewsLetter'
+import { usePathname } from 'next/navigation'
 function Footer() {
+  const pathname = usePathname()
+
+  if(pathname === '/auth') return null
   return (
    <footer className="bg-gray-100 mt-20">
   <div className="max-w-screen-xl px-4 pt-8 pb-5 mx-auto sm:px-6 lg:px-8">

@@ -3,10 +3,12 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {ASSETS} from '../../../../public/Assets'
+import { usePathname } from 'next/navigation';
 import { link } from 'fs';
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname()
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -31,6 +33,8 @@ function Header() {
     }
   ]
 
+  if(pathname === '/auth') return null
+
   return (
     <div>
       <nav className="bg-bg-gray-100  w-full ">
@@ -51,7 +55,7 @@ function Header() {
 
             <Link
            
-              href="/book-now"
+              href="/auth"
               className="  bg-orange-600 border-2 border-gray-100 text-white transition-all hover:ring-4 hover:ring-[#43B97F] font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none"
               >
               Login
