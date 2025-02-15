@@ -181,7 +181,7 @@ className="object-cover"
                   }}
                 > 
                 <Link href={`/country-detail/${slide.title}`}>
-                  <button className="capitalize border-2  bg-[#43B97F] text-white transition-all hover:ring-4 hover:ring-[#43B97F] font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none">
+                  <button className="capitalize border-2  bg-orange-600 text-white transition-all hover:ring-4 hover:orange-400 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none">
                     More about {slide.title}
                   </button>
 </Link>
