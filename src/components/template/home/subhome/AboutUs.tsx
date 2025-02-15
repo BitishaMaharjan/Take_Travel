@@ -33,7 +33,7 @@ Explore Nepal’s Wonders with TakeTravel
           
     <Link  href="/book-now">
     <button
-        className='bg-emerald-500 py-3 border-2 px-9 font-semibold text-white mt-5 rounded-3xl  hover:ring-4 hover:ring-[#43B97F]  transition-all text-lg'
+        className='bg-orange-600 py-3 border-2 px-9 font-semibold text-white mt-5 rounded-3xl  hover:ring-4 hover:ring-orange-400  transition-all text-lg'
         >
         Book Now
     </button>
