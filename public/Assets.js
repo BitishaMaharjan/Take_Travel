@@ -20,7 +20,7 @@ export const ASSETS = {
     africs:"/images/africs.jpg",
     antarctia:"/images/antarctia.jpeg",
     asia:"/images/asia.jpg",
-    trip:"/images/trip.png",
+    trip:"/images/package.jpg",
     europe:"/images/europe.avif",
     america:"/images/north america.jpg",
     mexico:"https://media.cntraveler.com/photos/606637fdaebc3617acf3d622/master/w_1600%2Cc_limit/CaboSanLucas-GettyImages-1171181238.jpg",
