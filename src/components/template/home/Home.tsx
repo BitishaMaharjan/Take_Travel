@@ -4,12 +4,10 @@ import Destinations from './subhome/Destinations'
 import AboutUs from './subhome/AboutUs'
 import BestPlaces from './subhome/BestPlaces'
 import NextTrip from './subhome/NextTrip'
-import LatestBlog from './subhome/LatestBlog'
 
 function Home() {
   return (
   <>
-
 <Intro/>
 <AboutUs/>
 <BestPlaces/>
