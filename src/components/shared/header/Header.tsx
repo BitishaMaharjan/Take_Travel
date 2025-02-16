@@ -1,15 +1,30 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {ASSETS} from '../../../../public/Assets'
 import { usePathname } from 'next/navigation';
 import TourGuideModal from '@/components/ui/TourGuideModal';
+import axios from 'axios';
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   const pathname = usePathname()
+
+  useEffect(()=>{
+    const getUser = async()=>{
+      const response = await axios.get('http://localhost:8000/users/me',{
+        headers:{
+          "Authorization": "Bearer " + localStorage.getItem("take-travel-token"),
+        }
+      })
+      console.log(response.data)
+      setUserRole(response.data.data.doc.role);
+    }
+    getUser()
+  },[pathname])
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -36,10 +51,7 @@ function Header() {
       name:"My Bookings",
       link:"/my-bookings"
     },
-    {
-      name:"Bookings",
-      link:"/guide-dash"
-    },
+    ...(userRole === "guide" ? [{ name: "Guide Dashboard", link: "/guide-dash" }] : []),
     {
        name:"Nearby Places",
        link:"/nearby-place"
@@ -71,13 +83,22 @@ function Header() {
             >
               Become a Guide
             </button>
-
+{
+  userRole ? <div
+  onClick={()=>{
+    localStorage.removeItem('take-travel-token')
+    setUserRole(null)
+  }}
+  className="bg-orange-600 border-2 border-gray-100 text-white transition-all hover:ring-4 hover:ring-orange-400 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none">
+    Logout
+  </div>:
             <Link
               href="/auth"
               className="bg-orange-600 border-2 border-gray-100 text-white transition-all hover:ring-4 hover:ring-orange-400 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none"
             >
               Login / Signup
             </Link>
+}
 
             <button
               onClick={toggleMenu}

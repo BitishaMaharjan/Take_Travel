@@ -24,7 +24,7 @@ const LoginPage = () => {
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const router = useRouter();
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const pathname = usePathname();
 
   // useEffect(() => {
@@ -87,6 +87,11 @@ const LoginPage = () => {
       localStorage.setItem("take-travel-token", response.data.token);
       setLoginEmail("");
       setLoginPassword("");
+      if(response.data.data.role === 'guide'){
+        router.push('/guide-dash')
+      }else{
+        router.push('/')
+      }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Login failed", {
