@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, FormEvent, ChangeEvent } from 'react';
+import React, { useState, FormEvent, ChangeEvent, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Card, 
@@ -104,7 +104,7 @@ const MOCK_PACKAGES: Package[] = [
 
 const ControlPanel = () => {
   const [guides, setGuides] = useState<Guide[]>(MOCK_GUIDES);
-  const [packages, setPackages] = useState<Package[]>(MOCK_PACKAGES);
+  const [packages, setPackages] = useState<any>(MOCK_PACKAGES);
   const [newInclude, setNewInclude] = useState('');
   const [includes, setIncludes] = useState<string[]>([]);
   
@@ -132,7 +132,35 @@ const ControlPanel = () => {
       setNewInclude('');
     }
   };
-
+  const getPackage = async () => {
+    try {
+      const result = await axios.get('http://localhost:8000/packages/', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('take-travel-token')}`
+        }
+      });
+  
+      console.log("Fetched Packages:", result.data); // Debugging API response
+  
+      const fetchedPackages = result.data?.data?.packages; // Extract nested packages
+  
+      if (Array.isArray(fetchedPackages)) {
+        setPackages(fetchedPackages); // Ensure correct state update
+      } else {
+        console.error("Expected an array but got:", fetchedPackages);
+        setPackages([]); // Avoid breaking the .map()
+      }
+    } catch (error) {
+      toast.error("Failed to fetch packages");
+      console.error("Error fetching packages:", error);
+    }
+  };
+  
+  
+  useEffect(() => {
+    getPackage();
+  }, []);
+  
   const handleRemoveInclude = (index: number) => {
     setIncludes(includes.filter((_, i) => i !== index));
   };
@@ -553,8 +581,11 @@ const ControlPanel = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {packages.map(pkg => (
+              {packages.length === 0 ? (
+      <p className="text-muted-foreground">No packages available</p>
+    ) : (
+      <div className="space-y-4">
+        {packages.map((pkg:any) => (
                     <motion.div
                       key={pkg.id}
                       initial={{ y: 20, opacity: 0 }}
@@ -563,10 +594,11 @@ const ControlPanel = () => {
                       className="border rounded-lg p-4"
                     >
                       <div className="flex flex-col md:flex-row gap-4 mb-3">
-                        {pkg.imageUrl && (
+                        {pkg.imageBase64 && (
                           <div className="w-full md:w-24 h-24 bg-muted rounded-md overflow-hidden">
                             <img 
-                              src={pkg.imageUrl} 
+                              src={pkg.imageBase64
+                              } 
                               alt={pkg.name} 
                               className="w-full h-full object-cover"
                             />
@@ -601,7 +633,7 @@ const ControlPanel = () => {
                       <div className="mt-2">
                         <p className="text-sm font-medium mb-1">Includes:</p>
                         <div className="flex flex-wrap gap-1">
-                          {pkg.includes.map((item, index) => (
+                          {pkg.includes.map((item:any, index:any) => (
                             <Badge key={index} variant="outline" className="text-xs">
                               {item}
                             </Badge>
@@ -610,9 +642,73 @@ const ControlPanel = () => {
                       </div>
                     </motion.div>
                   ))}
-                </div>
+                </div>)}
               </CardContent>
             </Card>
+          {/* <Card>
+  <CardHeader>
+    <CardTitle>Existing Packages</CardTitle>
+    <CardDescription>View and manage current tour packages</CardDescription>
+  </CardHeader>
+  <CardContent>
+    {packages.length === 0 ? (
+      <p className="text-muted-foreground">No packages available</p>
+    ) : (
+      <div className="space-y-4">
+        {packages.map((pkg:any) => (
+          <motion.div
+            key={pkg.id}
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="border rounded-lg p-4"
+          >
+            <div className="flex flex-col md:flex-row gap-4 mb-3">
+              {pkg.imageUrl && (
+                <div className="w-full md:w-24 h-24 bg-muted rounded-md overflow-hidden">
+                  <img 
+                    src={pkg.imageUrl} 
+                    alt={pkg.name} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <div className="flex-1">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h3 className="font-medium">{pkg.name}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{pkg.description}</p>
+                  </div>
+                  <Badge variant="secondary">${pkg.price}</Badge>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 text-sm">
+                  <div>
+                    <span className="font-medium">Origin:</span> {pkg.origin}
+                  </div>
+                  <div>
+                    <span className="font-medium">Destination:</span> {pkg.destination}
+                  </div>
+                  <div>
+                    <span className="font-medium">Duration:</span> {pkg.duration} days
+                  </div>
+                  <div>
+                    <span className="font-medium">Difficulty:</span> {pkg.difficulty}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-2">
+              <p className="text-sm font-medium mb-1">Includes:</p>
+              <div className="flex flex-wrap gap-1">
+                {/* {pkg.includes.map((item:any, index:any) => (
+                  <Badge key={index} variant="outline" className="text-xs">
+                    {item}
+                  </Badge>
+                ))} */}
+      
+
           </div>
         </TabsContent>
       </Tabs>

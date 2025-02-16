@@ -1,57 +1,112 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import axios from 'axios';
 import { ASSETS } from '../../../public/Assets';
 import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
-
-const tours = [
-    { src: ASSETS.itely, title: "Italy", cost: "$15k", trip: "28 days" },
-    { src: ASSETS.thailand, title: "Thailand", cost: "$5k", trip: "8 days" },
-    { src: ASSETS.south_africa, title: "South Africa", cost: "$20k", trip: "20 days" },
-    { src: ASSETS.japan, title: "Japan", cost: "$25k", trip: "18 days" },
-    { src: ASSETS.spain, title: "Spain", cost: "$10k", trip: "10 days" },
-    { src: ASSETS.columbia, title: "Columbia", cost: "$15k", trip: "28 days" },
-    { src: ASSETS.france, title: "France", cost: "$35k", trip: "28 days" },
-    { src: ASSETS.indonesia, title: "Indonesia", cost: "$35k", trip: "38 days" },
-    { src: ASSETS.canada, title: "Canada", cost: "$1k", trip: "2 days" },
-    { src: ASSETS.india, title: "India", cost: "$5k", trip: "8 days" },
-    { src: ASSETS.australia, title: "Australia", cost: "$1k", trip: "2 days" },
-    { src: ASSETS.USA, title: "USA", cost: "$5k", trip: "18 days" },
-    { src: ASSETS.brazil, title: "Brazil", cost: "$115k", trip: "28 days" },
-    { src: ASSETS.mexico, title: "Mexico", cost: "$10k", trip: "18 days" },
-    { src: ASSETS.china, title: "China", cost: "$35k", trip: "26 days" },
-];
+import { toast } from 'sonner';
 
 const ITEMS_PER_PAGE = 6;
 
 const ExplorePage = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(""); // Initialize as an empty string or another default value
+
   const [priceRange, setPriceRange] = useState('');
   const [duration, setDuration] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [packages, setPackages] = useState<any[]>([]);  // State for holding fetched packages
 
-  const filteredTours = tours.filter(tour => {
-    const matchesSearch = tour.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const cost = parseInt(tour.cost.replace(/[^0-9]/g, ''));
-    const days = parseInt(tour.trip);
+  // Fetching packages from the API
+  const getPackage = async () => {
+    try {
+      const result = await axios.get('http://localhost:8000/packages/', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('take-travel-token')}`
+        }
+      });
+
+      console.log("Fetched Packages:", result.data); // Debugging API response
+
+      const fetchedPackages = result.data?.data?.packages; // Extract nested packages
+
+      if (Array.isArray(fetchedPackages)) {
+        setPackages(fetchedPackages); // Ensure correct state update
+      } else {
+        console.error("Expected an array but got:", fetchedPackages);
+        setPackages([]); // Avoid breaking the .map()
+      }
+    } catch (error) {
+      toast.error("Failed to fetch packages");
+      console.error("Error fetching packages:", error);
+    }
+  };
+
+  useEffect(() => {
+    getPackage(); // Call the function when the component mounts
+  }, []);
+
+
+  console.log(packages);
+  // const filteredPackages = packages.filter(pkg => {
+  //   const matchesSearch = searchQuery ? pkg.name?.toLowerCase().includes(searchQuery.toLowerCase()) : true;
+  
+  //   const cost = pkg.price ? parseInt(pkg.price.replace(/[^0-9]/g, '')) : 0;
+  //   const days = pkg.duration ? parseInt(pkg.duration) : 0;
+  
+  //   const matchesPrice = !priceRange || 
+  //     (priceRange === '0-5000' && cost <= 5000) ||
+  //     (priceRange === '5000-15000' && cost > 5000 && cost <= 15000) ||
+  //     (priceRange === '15000+' && cost > 15000);
+  
+  //   console.log('Checking Price Range:', matchesPrice, cost, priceRange);
+  
+  //   const matchesDuration = !duration ||
+  //     (duration === 'short' && days <= 7) ||
+  //     (duration === 'medium' && days > 7 && days <= 14) ||
+  //     (duration === 'long' && days > 14);
+  
+  //   console.log('Checking Duration:', matchesDuration, days, duration);
+  
+  //   return matchesSearch && matchesPrice && matchesDuration;
+  // });
+  const filteredPackages = packages.filter(pkg => {
+    const matchesSearch = searchQuery
+      ? pkg.name?.toLowerCase().includes(searchQuery.toLowerCase()) 
+      : true;
     
+    // Debugging search query matching
+    console.log('Searching for:', searchQuery, 'in:', pkg.title, 'Match:', matchesSearch);
+  
+    // Assuming cost and trip are in string format and need cleaning for filtering
+    const cost = pkg.cost ? parseInt(pkg.cost.replace(/[^0-9]/g, '')) : 0;
+    const days = pkg.trip ? parseInt(pkg.trip.replace(/[^0-9]/g, '')) : 0;
+  
     const matchesPrice = !priceRange || 
       (priceRange === '0-5000' && cost <= 5000) ||
       (priceRange === '5000-15000' && cost > 5000 && cost <= 15000) ||
       (priceRange === '15000+' && cost > 15000);
-      
+    
+    console.log('Checking Price Range:', matchesPrice, cost, priceRange);
+  
     const matchesDuration = !duration ||
       (duration === 'short' && days <= 7) ||
       (duration === 'medium' && days > 7 && days <= 14) ||
       (duration === 'long' && days > 14);
-      
+    
+    console.log('Checking Duration:', matchesDuration, days, duration);
+  
     return matchesSearch && matchesPrice && matchesDuration;
   });
+  
+  console.log('Filtered Packages:', filteredPackages);
+  
+  
 
-  const totalPages = Math.ceil(filteredTours.length / ITEMS_PER_PAGE);
+  
+  const totalPages = Math.ceil(filteredPackages.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedTours = filteredTours.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const paginatedPackages = filteredPackages.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   const handlePageChange = (page: any) => {
     setCurrentPage(page);
@@ -98,32 +153,32 @@ const ExplorePage = () => {
 
         {/* Results Count */}
         <div className="mb-4 text-gray-600">
-          Showing {Math.min(startIndex + 1, filteredTours.length)} - {Math.min(startIndex + ITEMS_PER_PAGE, filteredTours.length)} of {filteredTours.length} tours
+          Showing {Math.min(startIndex + 1, filteredPackages.length)} - {Math.min(startIndex + ITEMS_PER_PAGE, filteredPackages.length)} of {filteredPackages.length} packages
         </div>
 
         {/* Card Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {paginatedTours.map((tour, index) => (
+          {paginatedPackages.map((pkg, index) => (
             <div key={index} className="rounded-xl overflow-hidden shadow-lg bg-white hover:shadow-xl transition-shadow duration-300">
               <div className="relative">
                 <img
-                  src={tour.src}
-                  alt={tour.title}
+                  src={pkg.imageBase64}
+                  alt={pkg.title}
                   className="object-cover w-full h-56"
                 />
               </div>
               <div className="p-4">
                 <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-lg font-semibold">{tour.title}</h3>
-                  <span className="font-semibold text-green-600">{tour.cost}</span>
+                  <h3 className="text-lg font-semibold">{pkg.name}</h3>
+                  <span className="font-semibold text-green-600">{pkg.price}</span>
                 </div>
                 <div className="flex items-center text-gray-600">
                   <Clock className="w-4 h-4" />
-                  <span className="ml-2 text-sm">{tour.trip}</span>
+                  <span className="ml-2 text-sm">{pkg.duration}</span>
                 </div>
-                <Link href={`/country-detail/${tour.title}`}>
+                <Link href={`/country-detail/${pkg.name}`}>
                   <button className="mt-4 w-full bg-orange-600 text-white py-2 rounded-lg hover:ring-2 hover:ring-orange-400 transition">
-                    More about {tour.title}
+                    More about {pkg.name}
                   </button>
                 </Link>
               </div>
@@ -132,7 +187,7 @@ const ExplorePage = () => {
         </div>
 
         {/* Pagination */}
-        {filteredTours.length > 0 && (
+        {filteredPackages.length > 0 && (
           <div className="mt-8 flex justify-center items-center gap-2">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
@@ -167,9 +222,9 @@ const ExplorePage = () => {
         )}
 
         {/* No Results Message */}
-        {filteredTours.length === 0 && (
+        {filteredPackages.length === 0 && (
           <div className="text-center py-10 text-gray-500">
-            No tours found matching your criteria
+            No packages found matching your criteria
           </div>
         )}
       </div>
