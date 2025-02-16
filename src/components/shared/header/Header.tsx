@@ -4,10 +4,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {ASSETS} from '../../../../public/Assets'
 import { usePathname } from 'next/navigation';
-import { link } from 'fs';
+import TourGuideModal from '@/components/ui/TourGuideModal';
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
   const pathname = usePathname()
 
   const toggleMenu = () => {
@@ -49,29 +50,35 @@ function Header() {
 
   return (
     <div>
-      <nav className="bg-bg-gray-100  w-full ">
+      <nav className="bg-bg-gray-100 w-full">
         <div className="flex flex-wrap items-center py-2 sm:py-0 flex-col sm:flex-row justify-between max-w-screen-xl px-4 mx-auto">
           <Link href="/" >
-          <Image
-          src={ASSETS.logo}
-          alt="travel the world"
-          height={170}
-          width={170}
-          />
+            <Image
+              src={ASSETS.logo}
+              alt="travel the world"
+              height={170}
+              width={170}
+            />
           </Link>
-          <div className="flex items-center gap-x-12  ml-2 mt-2 sm:mt-0 sm:gap-x-0  sm:ml-0 lg:order-2">
+          <div className="flex items-center gap-x-4 ml-2 mt-2 sm:mt-0 sm:gap-x-4 sm:ml-0 lg:order-2">
             <div className="hidden mt-2 mr-4 sm:inline-block">
               <span></span>
             </div>
 
+            <button
+              onClick={() => setIsGuideModalOpen(true)}
+              className="bg-white border-2 border-orange-600 text-orange-600 transition-all hover:ring-4 hover:ring-orange-200 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 focus:outline-none"
+            >
+              Become a Guide
+            </button>
 
             <Link
-           
               href="/auth"
-              className="  bg-orange-600 border-2 border-gray-100 text-white transition-all hover:ring-4 hover:ring-orange-400 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none"
-              >
+              className="bg-orange-600 border-2 border-gray-100 text-white transition-all hover:ring-4 hover:ring-orange-400 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none"
+            >
               Login / Signup
             </Link>
+
             <button
               onClick={toggleMenu}
               type="button"
@@ -113,27 +120,27 @@ function Header() {
             id="mobile-menu-2"
           >
             <ul className="flex flex-col mt-4 font-medium lg:flex-row lg:space-x-8 lg:mt-0">
-          {
-            Links.map((item,index)=>(
+              {Links.map((item,index)=>(
                 <li key={index}>
-                <Link
-                  href={item.link}
-                  className="block py-2 font-semibold pl-3 pr-4 text-black  rounded lg:bg-transparent lg:hover:text-orange-400 lg:p-0 "
-                  aria-current="page"
-                >
-
-                  {item.name}
-                </Link>
-              </li>
-            ))
-          }
-
-              
-             
+                  <Link
+                    href={item.link}
+                    className="block py-2 font-semibold pl-3 pr-4 text-black rounded lg:bg-transparent lg:hover:text-orange-400 lg:p-0"
+                    aria-current="page"
+                  >
+                    {item.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
       </nav>
+
+      {/* Tour Guide Registration Modal */}
+      <TourGuideModal 
+        isOpen={isGuideModalOpen} 
+        onClose={() => setIsGuideModalOpen(false)} 
+      />
     </div>
   );
 }
