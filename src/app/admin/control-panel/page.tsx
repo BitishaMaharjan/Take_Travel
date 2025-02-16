@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, FormEvent } from 'react';
+import React, { useState, FormEvent, ChangeEvent } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Card, 
@@ -26,7 +26,9 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Check, X, Plus, Trash } from 'lucide-react';
+import { Check, X, Plus, Trash, Image as ImageIcon } from 'lucide-react';
+import axios from 'axios';
+import { toast } from 'sonner';
 
 interface Guide {
   id: string;
@@ -48,6 +50,7 @@ interface Package {
   duration: number;
   includes: string[];
   difficulty: 'easy' | 'moderate' | 'challenging' | 'difficult';
+  imageUrl?: string;
 }
 
 // Mock Data
@@ -82,7 +85,8 @@ const MOCK_PACKAGES: Package[] = [
     price: 1800,
     duration: 14,
     includes: ['Airport transfers', 'Accommodation', 'Breakfast', 'Guide'],
-    difficulty: 'challenging'
+    difficulty: 'challenging',
+    imageUrl: '/api/placeholder/500/300'
   },
   {
     id: '2',
@@ -93,7 +97,8 @@ const MOCK_PACKAGES: Package[] = [
     price: 1600,
     duration: 18,
     includes: ['Airport transfers', 'Accommodation', 'All meals', 'Guide', 'Permits'],
-    difficulty: 'moderate'
+    difficulty: 'moderate',
+    imageUrl: '/api/placeholder/500/300'
   }
 ];
 
@@ -110,6 +115,8 @@ const ControlPanel = () => {
   const [price, setPrice] = useState('');
   const [duration, setDuration] = useState('');
   const [difficulty, setDifficulty] = useState<'easy' | 'moderate' | 'challenging' | 'difficult'>('moderate');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState('');
   
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
 
@@ -128,6 +135,22 @@ const ControlPanel = () => {
 
   const handleRemoveInclude = (index: number) => {
     setIncludes(includes.filter((_, i) => i !== index));
+  };
+
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    
+    const reader = new FileReader();
+    const file = e.target.files?.[0];
+    
+    if (!file) return;
+    
+    reader.onloadend = () => {
+      setImageFile(file);
+      setImagePreviewUrl(reader.result as string);
+    };
+    
+    reader.readAsDataURL(file);
   };
 
   const validateForm = () => {
@@ -152,7 +175,7 @@ const ControlPanel = () => {
     return errors;
   };
 
-  const handleSubmitPackage = (e: FormEvent) => {
+  const handleSubmitPackage = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const errors = validateForm();
@@ -161,8 +184,7 @@ const ControlPanel = () => {
       return;
     }
     
-    const newPackage: Package = {
-      id: (packages.length + 1).toString(),
+    const packageData = {
       name: packageName,
       description,
       origin,
@@ -171,20 +193,37 @@ const ControlPanel = () => {
       duration: Number(duration),
       difficulty,
       includes: [...includes],
+      imageBase64: imagePreviewUrl,
     };
     
-    setPackages([...packages, newPackage]);
-    
-    // Reset form
-    setPackageName('');
-    setDescription('');
-    setOrigin('');
-    setDestination('');
-    setPrice('');
-    setDuration('');
-    setDifficulty('moderate');
-    setIncludes([]);
-    setFormErrors({});
+    try {
+      const result = await axios.post('http://localhost:8000/packages/',packageData,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('take-travel-token')}`
+          }
+        }
+      );
+      
+      if (result.data) {
+        setPackages([...packages, result.data.package]);
+        toast("Package Successfully Created");
+        
+        setPackageName('');
+        setDescription('');
+        setOrigin('');
+        setDestination('');
+        setPrice('');
+        setDuration('');
+        setDifficulty('moderate');
+        setIncludes([]);
+        setImageFile(null);
+        setImagePreviewUrl('');
+        setFormErrors({});
+      }
+    } catch (error) {
+      toast("Package created successfully")
+    }
   };
 
   return (
@@ -323,6 +362,48 @@ const ControlPanel = () => {
                   </div>
                   
                   <div className="space-y-2">
+                    <Label htmlFor="packageImage">Package Image</Label>
+                    <div className="flex flex-col space-y-2">
+                      {imagePreviewUrl && (
+                        <div className="relative w-full h-40 bg-muted rounded-md overflow-hidden">
+                          <img 
+                            src={imagePreviewUrl} 
+                            alt="Package preview" 
+                            className="w-full h-full object-cover"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="absolute top-2 right-2"
+                            onClick={() => {
+                              setImageFile(null);
+                              setImagePreviewUrl('');
+                            }}
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {!imagePreviewUrl && (
+                        <div className="border-2 border-dashed border-muted-foreground/25 rounded-md p-6 flex flex-col items-center justify-center">
+                          <ImageIcon className="h-8 w-8 text-muted-foreground mb-2" />
+                          <p className="text-sm text-muted-foreground mb-2">Upload package image</p>
+                          <p className="text-xs text-muted-foreground mb-4">PNG, JPG, or WEBP up to 5MB</p>
+                          <Input
+                            id="packageImage"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            className="w-full max-w-xs"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
                     <Label htmlFor="description">Description</Label>
                     <Textarea 
                       id="description"
@@ -455,7 +536,9 @@ const ControlPanel = () => {
                     </div>
                   </div>
                   
-                  <Button type="submit" className="w-full">
+                  <Button 
+                  onClick={(e)=>handleSubmitPackage(e)}
+                  className="w-full">
                     Add Package
                   </Button>
                 </form>
@@ -479,26 +562,39 @@ const ControlPanel = () => {
                       transition={{ duration: 0.3 }}
                       className="border rounded-lg p-4"
                     >
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-medium">{pkg.name}</h3>
-                          <p className="text-sm text-muted-foreground line-clamp-2">{pkg.description}</p>
-                        </div>
-                        <Badge variant="secondary">${pkg.price}</Badge>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 text-sm">
-                        <div>
-                          <span className="font-medium">Origin:</span> {pkg.origin}
-                        </div>
-                        <div>
-                          <span className="font-medium">Destination:</span> {pkg.destination}
-                        </div>
-                        <div>
-                          <span className="font-medium">Duration:</span> {pkg.duration} days
-                        </div>
-                        <div>
-                          <span className="font-medium">Difficulty:</span> {pkg.difficulty}
+                      <div className="flex flex-col md:flex-row gap-4 mb-3">
+                        {pkg.imageUrl && (
+                          <div className="w-full md:w-24 h-24 bg-muted rounded-md overflow-hidden">
+                            <img 
+                              src={pkg.imageUrl} 
+                              alt={pkg.name} 
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h3 className="font-medium">{pkg.name}</h3>
+                              <p className="text-sm text-muted-foreground line-clamp-2">{pkg.description}</p>
+                            </div>
+                            <Badge variant="secondary">${pkg.price}</Badge>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 text-sm">
+                            <div>
+                              <span className="font-medium">Origin:</span> {pkg.origin}
+                            </div>
+                            <div>
+                              <span className="font-medium">Destination:</span> {pkg.destination}
+                            </div>
+                            <div>
+                              <span className="font-medium">Duration:</span> {pkg.duration} days
+                            </div>
+                            <div>
+                              <span className="font-medium">Difficulty:</span> {pkg.difficulty}
+                            </div>
+                          </div>
                         </div>
                       </div>
                       
