@@ -45,4 +45,11 @@ export const ASSETS = {
     album3:"/images/album3.jpg",
     album4:"/images/album4.jpg",
     album6:"/images/album6.jpg",
+    banner:"/images/banner.jpg",
+    hotel:"icon/hotel.png",
+    resturant:"icon/resturant.png",
+    bus:"icon/bus.png",
+    destination: "icon/destination.png",
+    heritage:"icon/heritage.png"
+
 }
