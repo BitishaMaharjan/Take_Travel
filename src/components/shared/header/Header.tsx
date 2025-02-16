@@ -38,7 +38,11 @@ function Header() {
     {
       name:"Bookings",
       link:"/guide-dash"
-    } 
+    },
+    {
+       name:"Nearby Places",
+       link:"/nearby-place"
+    }
   ]
 
   if(pathname === '/auth') return null
