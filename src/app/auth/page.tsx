@@ -11,6 +11,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner"
 import { IoChevronBackOutline } from "react-icons/io5";
+import axios from "axios";
 
 const LoginPage = () => {
   const [firstName, setfirstName] = useState("");
@@ -55,143 +56,106 @@ const LoginPage = () => {
 
 
   const handleLogin = async () => {
-    toast('login sucessfull')
-    // setLoading(true);
-    // try {
+    setLoading(true);
+    try {
 
-    //   if (!loginEmail || !loginPassword) {
+      if (!loginEmail || !loginPassword) {
         
-    //     toast.error("Please provide email and password", {
-    //       style: {
-    //         border: "1px solid #713200",
-    //         padding: "16px",
-    //       },
-    //     });
-    //     return;
-    //   }
-    //   const response = await axios.post(
-    //     "https://api.acan.org.np/api/auth/login",
-    //     { email: loginEmail, password: loginPassword }
-    //   );
-    //   //(response);
+        toast.error("Please provide email and password", {
+          style: {
+            border: "1px solid #713200",
+            padding: "16px",
+          },
+        });
+        return;
+      }
+      const response = await axios.post(
+        "http://localhost:8000/users/login",
+        { email: loginEmail, password: loginPassword }
+      );
       
-    //   toast.success("Login successful. Please wait ...", {
-    //     style: {
-    //       border: "1px solid #713200",
-    //       padding: "16px",
-    //     },
-    //   });
+      toast.success("Login successful. Please wait ...", {
+        style: {
+          border: "1px solid #713200",
+          padding: "16px",
+        },
+      });
 
-    //   toast.success("Login successful");
+      toast.success("Login successful");
 
-    //   if (typeof window === "undefined") return;
-    //   localStorage.setItem("acan-portal-token", response.data.token);
-    //   const userInfo = await getUser(response.data.token);
-    //   if (userInfo.termCondition) {
-    //     router.push("/auth/dashboard");
-    //   } else {
-    //     router.push("/auth/registration");
-    //   }
-    //   // clear form
-    //   setLoginEmail("");
-    //   setLoginPassword("");
-    //   regenerateCaptcha();
-    //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    // } catch (err: any) {
-    //   //(err);
-      
-    //   toast.error(err.response?.data?.message || "Login failed", {
-    //     style: {
-    //       border: "1px solid #713200",
-    //       padding: "16px",
-    //     },
-    //   });
-    // } finally {
-    //   setLoading(false);
-    // }
+      if (typeof window === "undefined") return;
+      localStorage.setItem("take-travel-token", response.data.token);
+      setLoginEmail("");
+      setLoginPassword("");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Login failed", {
+        style: {
+          border: "1px solid #713200",
+          padding: "16px",
+        },
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSignup = async () => {
-    toast('Signup Successful')
-    // setLoading(true);
-    // try {
-    //   if (!firstName || !email || !password || !confirmPassword) {
+    setLoading(true);
+    try {
+      if (!firstName || !email || !password || !confirmPassword || !lastName) {
         
-    //   toast.error("Please provide all the fields", {
-    //     style: {
-    //       border: "1px solid #713200",
-    //       padding: "16px",
-    //     },
-    //   });
-    //     return;
-    //   }
-    //   // terms should be checked
-    //   if (!terms) {
-        
-    //   toast.error("Please agree to the terms and conditions", {
-    //     style: {
-    //       border: "1px solid #713200",
-    //       padding: "16px",
-    //     },
-    //   });
-    //     return;
-    //   }
+      toast.error("Please provide all the fields", {
+        style: {
+          border: "1px solid #713200",
+          padding: "16px",
+        },
+      });
+        return;
+      }
 
-    //   if (captchaInput.toUpperCase() !== captchaText) {
+      if (password === confirmPassword) {
         
-    //   toast.error("CAPTCHA verification failed", {
-    //     style: {
-    //       border: "1px solid #713200",
-    //       padding: "16px",
-    //     },
-    //   });
-    //     regenerateCaptcha();
-    //     return;
-    //   }
-
-    //   if (password === confirmPassword) {
-    //     const response = await axios.post(
-    //       "https://api.acan.org.np/api/auth/register",
-    //       { firstName, middleName, lastName, email, password }
-    //     );
-    //     console.log(response);
+        const response = await axios.post(
+          "http://localhost:8000/users/signup",
+          { name:firstName + ' '+ middleName+ ' ' + lastName, email, password,passwordConfirm:confirmPassword,role:'user' }
+        );
+        console.log(response);
         
-    //   toast.success("Account registered. Please check your email to verify your account.", {
-    //     style: {
-    //       border: "1px solid #713200",
-    //       padding: "16px",
-    //     },
-    //   });
+      toast.success("Account registered. Please check your email to verify your account.", {
+        style: {
+          border: "1px solid #713200",
+          padding: "16px",
+        },
+      });
 
-    //     setfirstName("");
-    //     setMiddleName("");
-    //     setLastName("");
-    //     setEmail("");
-    //     setPassword("");
-    //     setConfirmPassword("");
-    //     regenerateCaptcha();
-    //     setTerms(false);
-    //     return;
-    //   }
+        setfirstName("");
+        setMiddleName("");
+        setLastName("");
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+        return;
+      }
       
-    //   toast.error("Password does not match", {
-    //     style: {
-    //       border: "1px solid #713200",
-    //       padding: "16px",
-    //     },
-    //   });
-    //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    // } catch (err: any) {
-    //   //(err);
-    //   toast.error(err.response?.data?.message || "Signup failed", {
-    //     style: {
-    //       border: "1px solid #713200",
-    //       padding: "16px",
-    //     },
-    //   });
-    // } finally {
-    //   setLoading(false);
-    // }
+      toast.error("Password does not match", {
+        style: {
+          border: "1px solid #713200",
+          padding: "16px",
+        },
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      //(err);
+      toast.error(err.response?.data?.message || "Signup failed", {
+        style: {
+          border: "1px solid #713200",
+          padding: "16px",
+        },
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // if (loading) {
@@ -281,7 +245,7 @@ const LoginPage = () => {
                     onClick={handleLogin}
                     className="w-full bg-[#EA580C] text-white hover:bg-[#EA580C]/90 p-6 rounded-lg"
                   >
-                    Sign In
+                    {loading ? 'Loading' : 'Sign In'}
                   </Button>
                 </CardFooter>
               </Card>
