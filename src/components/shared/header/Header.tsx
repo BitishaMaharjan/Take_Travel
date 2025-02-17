@@ -3,9 +3,10 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {ASSETS} from '../../../../public/Assets'
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import TourGuideModal from '@/components/ui/TourGuideModal';
 import axios from 'axios';
+import { Router } from 'lucide-react';
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -13,6 +14,8 @@ function Header() {
   const [userRole, setUserRole] = useState(null);
   const pathname = usePathname()
 
+  
+  const router = useRouter()
   useEffect(()=>{
     const getUser = async()=>{
       const response = await axios.get('http://localhost:8000/users/me',{
@@ -24,38 +27,37 @@ function Header() {
       setUserRole(response.data.data.doc.role);
     }
     getUser()
-  },[pathname])
+  },[pathname,router])
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+
   const Links = [
-    {
-        name:"Home",
-        link:"/"
-    },
-    {
-      name:"Explore",
-      link: "/explore"
-    },
-    {
-        name:"About",
-        link:"/about-us"
-    },
-    {
-        name:"Contact Us",
-        link:"/contact-us"
-    },
-    {
-      name:"My Bookings",
-      link:"/my-bookings"
-    },
-    ...(userRole === "guide" ? [{ name: "Guide Dashboard", link: "/guide-dash" }] : []),
-    {
-       name:"Nearby Places",
-       link:"/nearby-place"
-    }
+    ...(userRole === 'admin'? [{ name: "Admin Dashboard", link: "/admin/dashboard" },{ name: "Control Panel", link: "/admin/control-panel" }] : []),
+    ...(userRole === 'user' || userRole === null ? [{
+      name:"Home",
+      link:"/"
+  },
+  {
+    name:"Explore",
+    link: "/explore"
+  },
+  {
+      name:"About",
+      link:"/about-us"
+  },
+  {
+      name:"Contact Us",
+      link:"/contact-us"
+  },
+  {
+    name:"My Bookings",
+    link:"/my-bookings"
+  }] :[])
+    ,
+    ...(userRole === "guide" ? [{ name: "Guide Dashboard", link: "/guide-dash" }] : [])
   ]
 
   if(pathname === '/auth') return null
@@ -76,18 +78,19 @@ function Header() {
             <div className="hidden mt-2 mr-4 sm:inline-block">
               <span></span>
             </div>
-
+            {userRole === 'user' || userRole === null &&
             <button
               onClick={() => setIsGuideModalOpen(true)}
               className="bg-white border-2 border-orange-600 text-orange-600 transition-all hover:ring-4 hover:ring-orange-200 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 focus:outline-none"
             >
               Become a Guide
-            </button>
+            </button>}
 {
   userRole ? <div
   onClick={()=>{
     localStorage.removeItem('take-travel-token')
     setUserRole(null)
+    router.push('/')
   }}
   className="bg-orange-600 border-2 border-gray-100 text-white transition-all hover:ring-4 hover:ring-orange-400 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none">
     Logout

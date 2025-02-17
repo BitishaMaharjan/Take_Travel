@@ -89,7 +89,11 @@ const LoginPage = () => {
       setLoginPassword("");
       if(response.data.data.role === 'guide'){
         router.push('/guide-dash')
-      }else{
+      }
+      else if(response.data.data.role === 'admin'){
+        router.push('/admin/dashboard')
+      }
+      else{
         router.push('/')
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -100,6 +104,7 @@ const LoginPage = () => {
           padding: "16px",
         },
       });
+      setLoading(false);
     } finally {
       setLoading(false);
     }
