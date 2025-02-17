@@ -7,8 +7,8 @@ import { Toaster } from "@/components/ui/sonner"
  
 
 export const metadata: Metadata = {
-  title: "Travel Thrills - Explore the world with us",
-  description: "Travel thrills is a tour agency which provides top notch tour packages",
+  title: "Take Travel - Epic Adventures Across Nepal",
+  description: "TakeTravel curates epic Nepal adventures—from Himalayan treks to hidden gems—led by expert guides. Explore, experience, and make unforgettable memories!",
 };
 
 export default function RootLayout({
