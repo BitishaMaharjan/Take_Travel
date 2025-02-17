@@ -159,30 +159,37 @@ const ExplorePage = () => {
         {/* Card Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {paginatedPackages.map((pkg, index) => (
-            <div key={index} className="rounded-xl overflow-hidden shadow-lg bg-white hover:shadow-xl transition-shadow duration-300">
-              <div className="relative">
-                <img
-                  src={pkg.imageBase64}
-                  alt={pkg.title}
-                  className="object-cover w-full h-56"
-                />
-              </div>
-              <div className="p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-lg font-semibold">{pkg.name}</h3>
-                  <span className="font-semibold text-green-600">{pkg.price}</span>
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <Clock className="w-4 h-4" />
-                  <span className="ml-2 text-sm">{pkg.duration}</span>
-                </div>
-                <Link href={`/country-detail/${pkg.name}`}>
-                  <button className="mt-4 w-full bg-orange-600 text-white py-2 rounded-lg hover:ring-2 hover:ring-orange-400 transition">
-                    More about {pkg.name}
-                  </button>
-                </Link>
-              </div>
-            </div>
+         <div className="rounded-xl overflow-hidden shadow-lg bg-white hover:shadow-xl transition-shadow duration-300">
+         <div className="relative">
+           <img
+             src={pkg.imageBase64}
+             alt={pkg.title}
+             className="object-cover w-full h-56"
+           />
+         </div>
+         <div className="p-4">
+           <div className="flex justify-between items-center mb-2">
+             <h3 className="text-lg font-semibold">{pkg.name}</h3>
+             <span className="font-semibold text-green-600">{pkg.price}</span>
+           </div>
+           <div className="flex items-center text-gray-600">
+             <Clock className="w-4 h-4" />
+             <span className="ml-2 text-sm">{pkg.duration}</span>
+           </div>
+           <div className="mt-4 flex gap-2">
+             <Link href={`/country-detail/${pkg.name}`}>
+               <button className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:ring-2 hover:ring-orange-400 transition">
+                 More Details
+               </button>
+             </Link>
+             <Link href={`/book-now`}>
+               <button className="flex-1 bg-[#43B97F] text-white py-2 rounded-lg hover:ring-2 hover:ring-[#43B97F] transition">
+                 Book Now
+               </button>
+             </Link>
+           </div>
+         </div>
+       </div>
           ))}
         </div>
 
