@@ -170,24 +170,26 @@ const ExplorePage = () => {
          <div className="p-4">
            <div className="flex justify-between items-center mb-2">
              <h3 className="text-lg font-semibold">{pkg.name}</h3>
-             <span className="font-semibold text-green-600">{pkg.price}</span>
+             <span className="font-semibold text-green-700">${pkg.price}</span>
            </div>
+           <span className="font-normal">{pkg.destination}</span>
            <div className="flex items-center text-gray-600">
              <Clock className="w-4 h-4" />
-             <span className="ml-2 text-sm">{pkg.duration}</span>
+             <span className="ml-2 text-sm">{pkg.duration} duration</span>
            </div>
-           <div className="mt-4 flex gap-2">
-             <Link href={`/country-detail/${pkg.name}`}>
-               <button className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:ring-2 hover:ring-orange-400 transition">
-                 More Details
-               </button>
-             </Link>
-             <Link href={`/book-now`}>
-               <button className="flex-1 bg-[#43B97F] text-white py-2 rounded-lg hover:ring-2 hover:ring-[#43B97F] transition">
-                 Book Now
-               </button>
-             </Link>
-           </div>
+           <div className="mt-4 flex gap-4 justify-center">
+  <Link href={`/country-detail/${pkg.name}`} className="w-3/5">
+    <button className="w-full bg-orange-600 text-white py-3 rounded-lg hover:ring-2 hover:ring-orange-400 transition">
+      More Details
+    </button>
+  </Link>
+  <Link href={`/book-now`} className="w-3/5">
+    <button className="w-full bg-[#43B97F] text-white py-3 rounded-lg hover:ring-2 hover:ring-[#43B97F] transition">
+      Book Now
+    </button>
+  </Link>
+</div>
+
          </div>
        </div>
           ))}
