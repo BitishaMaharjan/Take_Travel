@@ -156,31 +156,6 @@ const Booking: React.FC<BookingProps> = ({ selectedPackage = null }) => {
             
             <form className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {/* Name Input */}
-                <div className="flex flex-col-reverse">
-                  <input
-                    type="text"
-                    className="p-4 rounded-xl bg-white border border-gray-400 focus:ring-2 focus:ring-[#43B97F] focus:border-[#43B97F]"
-                    id="name"
-                    placeholder="Your Name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  />
-                  <label htmlFor="name" className="text-lg mb-2">Your Name</label>
-                </div>
-
-                {/* Email Input */}
-                <div className="flex flex-col-reverse">
-                  <input
-                    type="email"
-                    className="p-4 rounded-xl bg-white border border-gray-400 focus:ring-2 focus:ring-[#43B97F]"
-                    id="email"
-                    placeholder="Your Email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  />
-                  <label htmlFor="email" className="text-lg mb-2">Your Email</label>
-                </div>
 
                 {/* Date & Time */}
                 <div className="flex flex-col-reverse">
