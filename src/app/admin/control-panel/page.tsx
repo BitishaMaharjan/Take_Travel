@@ -2,26 +2,15 @@
 import React, { useState, FormEvent, ChangeEvent, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
+  Card, CardContent, CardDescription, CardHeader, CardTitle 
 } from '@/components/ui/card';
 import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
+  Tabs, TabsContent, TabsList, TabsTrigger 
 } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -31,13 +20,13 @@ import axios from 'axios';
 import { toast } from 'sonner';
 
 interface Guide {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   experience: number;
   languages: string[];
   specialization: string;
-  status: 'pending' | 'approved' | 'rejected';
+  verified: boolean;
 }
 
 interface Package {
@@ -50,61 +39,12 @@ interface Package {
   duration: number;
   includes: string[];
   difficulty: 'easy' | 'moderate' | 'challenging' | 'difficult';
-  imageUrl?: string;
+  imageBase64?: string;
 }
 
-// Mock Data
-const MOCK_GUIDES: Guide[] = [
-  {
-    id: '1',
-    name: 'Raj Sharma',
-    email: 'raj@example.com',
-    experience: 5,
-    languages: ['English', 'Nepali', 'Hindi'],
-    specialization: 'Trekking, Cultural Tours',
-    status: 'pending'
-  },
-  {
-    id: '2',
-    name: 'Maya Gurung',
-    email: 'maya@example.com',
-    experience: 7,
-    languages: ['English', 'Nepali', 'German'],
-    specialization: 'Mountain Climbing, Wilderness Survival',
-    status: 'pending'
-  }
-];
-
-const MOCK_PACKAGES: Package[] = [
-  {
-    id: '1',
-    name: 'Everest Base Camp Trek',
-    description: 'Classic trek to the base of the world\'s highest mountain',
-    origin: 'United States',
-    destination: 'Everest Base Camp, Khumbu',
-    price: 1800,
-    duration: 14,
-    includes: ['Airport transfers', 'Accommodation', 'Breakfast', 'Guide'],
-    difficulty: 'challenging',
-    imageUrl: '/api/placeholder/500/300'
-  },
-  {
-    id: '2',
-    name: 'Annapurna Circuit',
-    description: 'Circumnavigate the Annapurna massif',
-    origin: 'Germany',
-    destination: 'Annapurna Region, Western Nepal',
-    price: 1600,
-    duration: 18,
-    includes: ['Airport transfers', 'Accommodation', 'All meals', 'Guide', 'Permits'],
-    difficulty: 'moderate',
-    imageUrl: '/api/placeholder/500/300'
-  }
-];
-
 const ControlPanel = () => {
-  const [guides, setGuides] = useState<Guide[]>(MOCK_GUIDES);
-  const [packages, setPackages] = useState<any>(MOCK_PACKAGES);
+  const [guides, setGuides] = useState<Guide[]>([]);
+  const [packages, setPackages] = useState<Package[]>([]);
   const [newInclude, setNewInclude] = useState('');
   const [includes, setIncludes] = useState<string[]>([]);
   
@@ -117,52 +57,88 @@ const ControlPanel = () => {
   const [difficulty, setDifficulty] = useState<'easy' | 'moderate' | 'challenging' | 'difficult'>('moderate');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState('');
-  
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
 
-  const handleGuideStatus = (id: string, status: 'approved' | 'rejected') => {
-    setGuides(guides.map(guide => 
-      guide.id === id ? { ...guide, status } : guide
-    ));
+  // Fetch guides function
+  const fetchGuides = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/users/', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('take-travel-token')}`
+        }
+      });
+      // Filter only guide role users
+      const guideUsers = response.data.data.users.filter((user: any) => user.role === 'guide');
+      setGuides(guideUsers);
+    } catch (error) {
+      toast.error('Failed to fetch guides');
+      console.error('Error fetching guides:', error);
+    }
   };
 
+  // Handle guide approval/rejection
+  const handleGuideStatus = async (id: string, approve: boolean) => {
+    try {
+      if (approve) {
+        await axios.patch(`http://localhost:8000/users/${id}/verify`, {}, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('take-travel-token')}`
+          }
+        });
+        toast.success('Guide approved successfully');
+      } else {
+        await axios.delete(`http://localhost:8000/users/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('take-travel-token')}`
+          }
+        });
+        toast.success('Guide rejected successfully');
+      }
+      fetchGuides(); // Refresh guides list
+    } catch (error) {
+      toast.error(approve ? 'Failed to approve guide' : 'Failed to reject guide');
+      console.error('Error updating guide status:', error);
+    }
+  };
+
+  // Package management functions
   const handleAddInclude = () => {
     if (newInclude.trim() !== '') {
       setIncludes([...includes, newInclude.trim()]);
       setNewInclude('');
     }
   };
-  const getPackage = async () => {
+
+  const handleRemoveInclude = (index: number) => {
+    setIncludes(includes.filter((_, i) => i !== index));
+  };
+
+  const getPackages = async () => {
     try {
       const result = await axios.get('http://localhost:8000/packages/', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('take-travel-token')}`
         }
       });
-  
-      console.log("Fetched Packages:", result.data); // Debugging API response
-  
-      const fetchedPackages = result.data?.data?.packages; // Extract nested packages
-  
-      if (Array.isArray(fetchedPackages)) {
-        setPackages(fetchedPackages); // Ensure correct state update
-      } else {
-        console.error("Expected an array but got:", fetchedPackages);
-        setPackages([]); // Avoid breaking the .map()
+      if (Array.isArray(result.data?.data?.packages)) {
+        const sanitizedPackages = result.data.data.packages.map((pkg: any) => ({
+          id: pkg.id || pkg._id,
+          name: pkg.name || 'Unnamed Package',
+          description: pkg.description || 'No description available',
+          origin: pkg.origin || 'Not specified',
+          destination: pkg.destination || 'Not specified',
+          price: typeof pkg.price === 'number' ? pkg.price : 0,
+          duration: typeof pkg.duration === 'number' ? pkg.duration : 0,
+          includes: Array.isArray(pkg.includes) ? pkg.includes : [],
+          difficulty: pkg.difficulty || 'moderate',
+          imageBase64: pkg.imageBase64 || null
+        }));
+        setPackages(sanitizedPackages);
       }
     } catch (error) {
       toast.error("Failed to fetch packages");
       console.error("Error fetching packages:", error);
     }
-  };
-  
-  
-  useEffect(() => {
-    getPackage();
-  }, []);
-  
-  const handleRemoveInclude = (index: number) => {
-    setIncludes(includes.filter((_, i) => i !== index));
   };
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -185,25 +161,16 @@ const ControlPanel = () => {
     const errors: {[key: string]: string} = {};
     
     if (!packageName.trim()) errors.name = "Package name is required";
-    else if (packageName.length < 3) errors.name = "Package name must be at least 3 characters";
-    
     if (!description.trim()) errors.description = "Description is required";
-    else if (description.length < 10) errors.description = "Description must be at least 10 characters";
-    
     if (!origin.trim()) errors.origin = "Origin country is required";
-    if (!destination.trim()) errors.destination = "Destination in Nepal is required";
-    
-    if (!price.trim()) errors.price = "Price is required";
-    else if (Number(price) <= 0) errors.price = "Price must be positive";
-    
-    if (!duration.trim()) errors.duration = "Duration is required";
-    else if (Number(duration) <= 0 || !Number.isInteger(Number(duration))) 
-      errors.duration = "Duration must be a positive integer";
+    if (!destination.trim()) errors.destination = "Destination is required";
+    if (!price.trim() || Number(price) <= 0) errors.price = "Valid price is required";
+    if (!duration.trim() || Number(duration) <= 0) errors.duration = "Valid duration is required";
     
     return errors;
   };
 
-  const handleSubmitPackage = async (e: React.FormEvent) => {
+  const handleSubmitPackage = async (e: FormEvent) => {
     e.preventDefault();
     
     const errors = validateForm();
@@ -225,7 +192,9 @@ const ControlPanel = () => {
     };
     
     try {
-      const result = await axios.post('http://localhost:8000/packages/',packageData,
+      const result = await axios.post(
+        'http://localhost:8000/packages/',
+        packageData,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('take-travel-token')}`
@@ -235,8 +204,9 @@ const ControlPanel = () => {
       
       if (result.data) {
         setPackages([...packages, result.data.package]);
-        toast("Package Successfully Created");
+        toast.success("Package created successfully");
         
+        // Reset form
         setPackageName('');
         setDescription('');
         setOrigin('');
@@ -250,9 +220,15 @@ const ControlPanel = () => {
         setFormErrors({});
       }
     } catch (error) {
-      toast("Package created successfully")
+      toast.error("Failed to create package");
+      console.error("Error creating package:", error);
     }
   };
+
+  useEffect(() => {
+    fetchGuides();
+    getPackages();
+  }, []);
 
   return (
     <motion.div 
@@ -278,15 +254,15 @@ const ControlPanel = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {guides.filter(g => g.status === 'pending').length === 0 ? (
+              {guides.filter(g => !g.verified).length === 0 ? (
                 <p className="text-muted-foreground">No pending guide approvals</p>
               ) : (
                 <div className="space-y-4">
                   {guides
-                    .filter(guide => guide.status === 'pending')
+                    .filter(guide => !guide.verified)
                     .map(guide => (
                       <motion.div
-                        key={guide.id}
+                        key={guide._id}
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.3 }}
@@ -297,7 +273,7 @@ const ControlPanel = () => {
                             <h3 className="font-medium">{guide.name}</h3>
                             <p className="text-sm text-muted-foreground">{guide.email}</p>
                           </div>
-                          <Badge>{guide.status}</Badge>
+                          <Badge>Pending</Badge>
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -319,13 +295,13 @@ const ControlPanel = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleGuideStatus(guide.id, 'rejected')}
+                            onClick={() => handleGuideStatus(guide._id, false)}
                           >
                             <X className="mr-1 h-4 w-4" /> Reject
                           </Button>
                           <Button
                             size="sm"
-                            onClick={() => handleGuideStatus(guide.id, 'approved')}
+                            onClick={() => handleGuideStatus(guide._id, true)}
                           >
                             <Check className="mr-1 h-4 w-4" /> Approve
                           </Button>
@@ -343,14 +319,14 @@ const ControlPanel = () => {
                 <CardTitle>Approved Guides</CardTitle>
               </CardHeader>
               <CardContent>
-                {guides.filter(g => g.status === 'approved').length === 0 ? (
+                {guides.filter(g => g.verified).length === 0 ? (
                   <p className="text-muted-foreground">No approved guides yet</p>
                 ) : (
                   <div className="space-y-2">
                     {guides
-                      .filter(guide => guide.status === 'approved')
+                      .filter(guide => guide.verified)
                       .map(guide => (
-                        <div key={guide.id} className="flex items-center justify-between border-b py-2 last:border-0">
+                        <div key={guide._id} className="flex items-center justify-between border-b py-2 last:border-0">
                           <div>
                             <p className="font-medium">{guide.name}</p>
                             <p className="text-sm text-muted-foreground">{guide.specialization}</p>
@@ -581,68 +557,81 @@ const ControlPanel = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-              {packages.length === 0 ? (
-      <p className="text-muted-foreground">No packages available</p>
-    ) : (
-      <div className="space-y-4">
-        {packages.map((pkg:any) => (
-                    <motion.div
-                      key={pkg.id}
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.3 }}
-                      className="border rounded-lg p-4"
-                    >
-                      <div className="flex flex-col md:flex-row gap-4 mb-3">
-                        {pkg.imageBase64 && (
-                          <div className="w-full md:w-24 h-24 bg-muted rounded-md overflow-hidden">
-                            <img 
-                              src={pkg.imageBase64
-                              } 
-                              alt={pkg.name} 
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
-                        <div className="flex-1">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <h3 className="font-medium">{pkg.name}</h3>
-                              <p className="text-sm text-muted-foreground line-clamp-2">{pkg.description}</p>
+                {!packages || packages.length === 0 ? (
+                  <p className="text-muted-foreground">No packages available</p>
+                ) : (
+                  <div className="space-y-4">
+                    {packages.map((pkg) => {
+                      if (!pkg) return null;
+                      
+                      return (
+                        <motion.div
+                          key={pkg.id}
+                          initial={{ y: 20, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          transition={{ duration: 0.3 }}
+                          className="border rounded-lg p-4"
+                        >
+                          <div className="flex flex-col md:flex-row gap-4 mb-3">
+                            {pkg.imageBase64 ? (
+                              <div className="w-full md:w-24 h-24 bg-muted rounded-md overflow-hidden">
+                                <img 
+                                  src={pkg.imageBase64} 
+                                  alt={pkg.name || 'Package image'} 
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-full md:w-24 h-24 bg-muted rounded-md flex items-center justify-center">
+                                <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                              </div>
+                            )}
+                            
+                            <div className="flex-1">
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <h3 className="font-medium">{pkg.name || 'Unnamed Package'}</h3>
+                                  <p className="text-sm text-muted-foreground line-clamp-2">
+                                    {pkg.description || 'No description available'}
+                                  </p>
+                                </div>
+                                <Badge variant="secondary">
+                                  ${typeof pkg.price === 'number' ? pkg.price.toFixed(2) : '0.00'}
+                                </Badge>
+                              </div>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 text-sm">
+                                <div>
+                                  <span className="font-medium">Origin:</span> {pkg.origin || 'Not specified'}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Destination:</span> {pkg.destination || 'Not specified'}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Duration:</span> {pkg.duration || 0} days
+                                </div>
+                                <div>
+                                  <span className="font-medium">Difficulty:</span> {pkg.difficulty || 'Not specified'}
+                                </div>
+                              </div>
                             </div>
-                            <Badge variant="secondary">${pkg.price}</Badge>
                           </div>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 text-sm">
-                            <div>
-                              <span className="font-medium">Origin:</span> {pkg.origin}
-                            </div>
-                            <div>
-                              <span className="font-medium">Destination:</span> {pkg.destination}
-                            </div>
-                            <div>
-                              <span className="font-medium">Duration:</span> {pkg.duration} days
-                            </div>
-                            <div>
-                              <span className="font-medium">Difficulty:</span> {pkg.difficulty}
+                          <div className="mt-2">
+                            <p className="text-sm font-medium mb-1">Includes:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {Array.isArray(pkg.includes) && pkg.includes.map((item, index) => (
+                                <Badge key={index} variant="outline" className="text-xs">
+                                  {item}
+                                </Badge>
+                              ))}
                             </div>
                           </div>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-2">
-                        <p className="text-sm font-medium mb-1">Includes:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {pkg.includes.map((item:any, index:any) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {item}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>)}
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           {/* <Card>
