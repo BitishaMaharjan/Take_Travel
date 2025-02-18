@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Legend, Pie, Cell } from 'recharts';
 import { Edit, ChevronDown, ChevronUp, Check, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -73,6 +73,8 @@ const newAccountsData: AccountsChartData[] = [
   { month: 'Apr', accounts: 130 },
   { month: 'May', accounts: 170 }
 ];
+const COLORS = ['#EA580C', '#0EA5E9', '#22C55E', '#FACC15']; // Orange, Blue, Green, Yellow
+
 
 const statusOptions = ['pending', 'confirmed', 'cancelled', 'completed'];
 
@@ -80,6 +82,8 @@ const TravelDashboard: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [guides, setGuides] = useState<Guide[]>([]);
   const [guideSearch, setGuideSearch] = useState<string>('');
+  const [bookingsChartData, setBookingsChartData] = useState<BookingChartData[]>([]);
+  const [chartData, setChartData] = useState<any []>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -92,22 +96,31 @@ const TravelDashboard: React.FC = () => {
           throw new Error("No token found in localStorage");
         }
 
-        const [bookingsResponse, guidesResponse] = await Promise.all([
-          axios.get("http://127.0.0.1:8000/bookings/getAllBookings", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get("http://127.0.0.1:8000/bookings/available-guides", {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-        ]);
+        const response = await axios.get("http://127.0.0.1:8000/bookings/getAllBookings", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-        if (bookingsResponse.data.status === 'success') {
-          setBookings(bookingsResponse.data.data.bookings);
-        }
+        if (response.data.status === 'success') {
+          setBookings(response.data.data.bookings);
+          processChartData(response.data.data.bookings);
+          setBookings(response.data.data.bookings);
+          const bookingCounts: { [key: string]: number } = {};
+          response.data.data.bookings.forEach((booking: Booking) => {
+            const month = new Date(booking.createdAt).toLocaleString('default', { month: 'short' });
+            bookingCounts[month] = (bookingCounts[month] || 0) + 1;
+          });
+  
+          // Convert to array for the chart
+          const chartData = Object.entries(bookingCounts).map(([month, count]) => ({
+            month,
+            bookings: count
+          })).sort((a, b) => new Date(`1 ${a.month} 2024`).getMonth() - new Date(`1 ${b.month} 2024`).getMonth());
+  
+          setBookingsChartData(chartData);
 
-        if (guidesResponse.data.status === 'success') {
-          setGuides(guidesResponse.data.data.guides);
         }
+        
+          
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -117,6 +130,67 @@ const TravelDashboard: React.FC = () => {
 
     fetchData();
   }, []);
+
+  const processChartData = (bookings: Booking[]) => {
+    const statusCounts: { [key: string]: number } = {};
+
+    bookings.forEach((booking) => {
+      const status = booking.status || "Unknown"; // Default to "Unknown" if no status
+      statusCounts[status] = (statusCounts[status] || 0) + 1;
+    });
+
+    const formattedData = Object.keys(statusCounts).map((status) => ({
+      name: status,
+      value: statusCounts[status],
+    }));
+
+    setChartData(formattedData);
+  };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+
+// useEffect(() => {
+//   const fetchData = async () => {
+//     try {
+//       setLoading(true);
+//       const token = localStorage.getItem("take-travel-token");
+//       if (!token) throw new Error("No token found");
+
+//       const { data } = await axios.get("http://127.0.0.1:8000/bookings/getAllBookings", {
+//         headers: { Authorization: `Bearer ${token}` },
+//       });
+
+//       if (data.status === 'success') {
+//         setBookings(data.data.bookings);
+
+//         // Process data for chart
+//         const bookingCounts: { [key: string]: number } = {};
+//         data.data.bookings.forEach((booking: Booking) => {
+//           const month = new Date(booking.createdAt).toLocaleString('default', { month: 'short' });
+//           bookingCounts[month] = (bookingCounts[month] || 0) + 1;
+//         });
+
+//         // Convert to array for the chart
+//         const chartData = Object.entries(bookingCounts).map(([month, count]) => ({
+//           month,
+//           bookings: count
+//         })).sort((a, b) => new Date(`1 ${a.month} 2024`).getMonth() - new Date(`1 ${b.month} 2024`).getMonth());
+
+//         setBookingsChartData(chartData);
+//       }
+//     } catch (err) {
+//       setError(err instanceof Error ? err.message : 'An error occurred');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   fetchData();
+// }, []);
+
+
+  
 
   const getStatusColor = (status: string): string => {
     switch (status.toLowerCase()) {
@@ -190,10 +264,7 @@ const TravelDashboard: React.FC = () => {
     <div className="flex flex-col gap-6 p-8 bg-gray-50 min-h-screen">
       <header className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">Travel Booking Dashboard</h1>
-        <div className="flex gap-2">
-          <Button variant="outline">Export Data</Button>
-          <Button style={{ backgroundColor: '#EA580C' }}>New Booking</Button>
-        </div>
+      
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -241,15 +312,25 @@ const TravelDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={newAccountsData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="accounts" fill="#EA580C" />
-                  </BarChart>
-                </ResponsiveContainer>
+              <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie 
+                  data={chartData} 
+                  dataKey="value" 
+                  nameKey="name" 
+                  cx="50%" 
+                  cy="50%" 
+                  outerRadius={100} 
+                  label 
+                >
+                  {chartData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
