@@ -243,12 +243,6 @@ const LoginPage = () => {
                         Keep me logged in
                       </label>
                     </div>
-                    <Link
-                      href={"/auth/forgot"}
-                      className="text-[#344d95] font-medium"
-                    >
-                      Forgot Password?
-                    </Link>
                   </div>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-4">
@@ -352,7 +346,7 @@ const LoginPage = () => {
                       I agree to the{" "}
                       <a
                         target="_blank"
-                        href="/terms-and-conditions"
+                        href=""
                         className="text-[#EA580C] font-bold"
                       >
                         terms and conditions.
