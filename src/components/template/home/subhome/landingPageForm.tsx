@@ -60,8 +60,8 @@ gap-x-1
 sm:ml-0 capitalize items-center bg-orange-600 p-2 text-white rounded-lg  justify-center">
 <IoSearch  size={23}/>
  
-{loading ? "Planning...."
-:'Plan your trip'
+{loading ? "Searching...."
+:'Search package'
 }
 </button>
 
