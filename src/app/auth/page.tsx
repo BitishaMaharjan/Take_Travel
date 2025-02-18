@@ -85,6 +85,7 @@ const LoginPage = () => {
 
       if (typeof window === "undefined") return;
       localStorage.setItem("take-travel-token", response.data.token);
+      localStorage.setItem("take-travel-userId", response.data.data._id);
       setLoginEmail("");
       setLoginPassword("");
       if(response.data.data.role === 'guide'){

@@ -55,6 +55,10 @@ function Header() {
   {
     name:"My Bookings",
     link:"/my-bookings"
+  },
+  {
+    name:"Nearby places",
+    link:"/nearby-place"
   }] :[])
     ,
     ...(userRole === "guide" ? [{ name: "Guide Dashboard", link: "/guide-dash" }] : [])
@@ -89,6 +93,8 @@ function Header() {
   userRole ? <div
   onClick={()=>{
     localStorage.removeItem('take-travel-token')
+    localStorage.removeItem('take-travel-userId')
+
     setUserRole(null)
     router.push('/')
   }}
