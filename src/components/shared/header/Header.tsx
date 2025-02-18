@@ -2,75 +2,75 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import {ASSETS} from '../../../../public/Assets'
+import { ASSETS } from '../../../../public/Assets';
 import { usePathname, useRouter } from 'next/navigation';
 import TourGuideModal from '@/components/ui/TourGuideModal';
 import axios from 'axios';
-import { Router } from 'lucide-react';
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
   const [userRole, setUserRole] = useState(null);
-  const pathname = usePathname()
+  const pathname = usePathname();
+  const router = useRouter();
 
-  
-  const router = useRouter()
-  useEffect(()=>{
-    const getUser = async()=>{
-      const response = await axios.get('http://localhost:8000/users/me',{
-        headers:{
-          "Authorization": "Bearer " + localStorage.getItem("take-travel-token"),
+  // Use localStorage to immediately set userRole from token if available
+  useEffect(() => {
+    const token = localStorage.getItem("take-travel-token");
+    if (token) {
+      const getUser = async () => {
+        try {
+          const response = await axios.get('http://localhost:8000/users/me', {
+            headers: {
+              "Authorization": "Bearer " + token,
+            }
+          });
+          setUserRole(response.data.data.doc.role);
+        } catch (error) {
+          console.error(error);
+          setUserRole(null); // In case of error, set to null
         }
-      })
-      console.log(response.data)
-      setUserRole(response.data.data.doc.role);
+      };
+      getUser();
+    } else {
+      setUserRole(null); // No token, reset user role
     }
-    getUser()
-  },[pathname,router])
+  }, [pathname, router]);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-
+  // Links based on user role
   const Links = [
-    ...(userRole === 'admin'? [{ name: "Admin Dashboard", link: "/admin/dashboard" },{ name: "Control Panel", link: "/admin/control-panel" }] : []),
-    ...(userRole === 'user' || userRole === null ? [{
-      name:"Home",
-      link:"/"
-  },
-  {
-    name:"Explore",
-    link: "/explore"
-  },
-  {
-      name:"About",
-      link:"/about-us"
-  },
-  {
-      name:"Contact Us",
-      link:"/contact-us"
-  },
-  {
-    name:"My Bookings",
-    link:"/my-bookings"
-  },
-  {
-    name:"Nearby places",
-    link:"/nearby-place"
-  }] :[])
-    ,
-    ...(userRole === "guide" ? [{ name: "Guide Dashboard", link: "/guide-dash" }] : [])
-  ]
+    ...(userRole === 'admin' ? [{ name: "Admin Dashboard", link: "/admin/dashboard" }, { name: "Control Panel", link: "/admin/control-panel" }] : []),
+    ...(userRole === 'user' || userRole === null ? [
+      { name: "Home", link: "/" },
+      { name: "Explore", link: "/explore" },
+      { name: "About", link: "/about-us" },
+      { name: "Contact Us", link: "/contact-us" },
+      { name: "Nearby places", link: "/nearby-place" }
+    ] : []),
+    ...(userRole === "guide" ? [{ name: "Guide Dashboard", link: "/guide-dash" }] : []),
+    ...(userRole === "user" ? [{ name: "My Bookings", link: "/my-bookingss" }] : [])
+  ];
 
-  if(pathname === '/auth') return null
+  // Logout handler
+  const logout = () => {
+    localStorage.removeItem('take-travel-token');
+    localStorage.removeItem('take-travel-userId');
+    setUserRole(null); // Immediately update the state on logout
+    router.push('/');
+  };
+
+  // If the user is on the '/auth' page, return null to avoid rendering the header
+  if (pathname === '/auth') return null;
 
   return (
     <div>
       <nav className="bg-bg-gray-100 w-full">
         <div className="flex flex-wrap items-center py-2 sm:py-0 flex-col sm:flex-row justify-between max-w-screen-xl px-4 mx-auto">
-          <Link href="/" >
+          <Link href="/">
             <Image
               src={ASSETS.logo}
               alt="travel the world"
@@ -83,31 +83,28 @@ function Header() {
               <span></span>
             </div>
             {userRole === 'user' || userRole === null &&
-            <button
-              onClick={() => setIsGuideModalOpen(true)}
-              className="bg-white border-2 border-orange-600 text-orange-600 transition-all hover:ring-4 hover:ring-orange-200 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 focus:outline-none"
-            >
-              Become a Guide
-            </button>}
-{
-  userRole ? <div
-  onClick={()=>{
-    localStorage.removeItem('take-travel-token')
-    localStorage.removeItem('take-travel-userId')
-
-    setUserRole(null)
-    router.push('/')
-  }}
-  className="bg-orange-600 border-2 border-gray-100 text-white transition-all hover:ring-4 hover:ring-orange-400 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none">
-    Logout
-  </div>:
-            <Link
-              href="/auth"
-              className="bg-orange-600 border-2 border-gray-100 text-white transition-all hover:ring-4 hover:ring-orange-400 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none"
-            >
-              Login / Signup
-            </Link>
-}
+              <button
+                onClick={() => setIsGuideModalOpen(true)}
+                className="bg-white border-2 border-orange-600 text-orange-600 transition-all hover:ring-4 hover:ring-orange-200 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 focus:outline-none"
+              >
+                Become a Guide
+              </button>}
+            {
+              userRole ? (
+                <div
+                  onClick={logout}
+                  className="bg-orange-600 border-2 border-gray-100 text-white transition-all hover:ring-4 hover:ring-orange-400 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none">
+                  Logout
+                </div>
+              ) : (
+                <Link
+                  href="/auth"
+                  className="bg-orange-600 border-2 border-gray-100 text-white transition-all hover:ring-4 hover:ring-orange-400 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none"
+                >
+                  Login / Signup
+                </Link>
+              )
+            }
 
             <button
               onClick={toggleMenu}
@@ -150,7 +147,7 @@ function Header() {
             id="mobile-menu-2"
           >
             <ul className="flex flex-col mt-4 font-medium lg:flex-row lg:space-x-8 lg:mt-0">
-              {Links.map((item,index)=>(
+              {Links.map((item, index) => (
                 <li key={index}>
                   <Link
                     href={item.link}
@@ -167,9 +164,9 @@ function Header() {
       </nav>
 
       {/* Tour Guide Registration Modal */}
-      <TourGuideModal 
-        isOpen={isGuideModalOpen} 
-        onClose={() => setIsGuideModalOpen(false)} 
+      <TourGuideModal
+        isOpen={isGuideModalOpen}
+        onClose={() => setIsGuideModalOpen(false)}
       />
     </div>
   );
