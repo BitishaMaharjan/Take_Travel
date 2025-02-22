@@ -129,7 +129,7 @@ const LoginPage = () => {
         
         const response = await axios.post(
           "http://localhost:8000/users/signup",
-          { name:firstName + ' '+ middleName+ ' ' + lastName, email, password,passwordConfirm:confirmPassword,role:'user' }
+          { name:firstName + ' '+ middleName+ ' ' + lastName, email, password,role:'user' }
         );
         console.log(response);
         
