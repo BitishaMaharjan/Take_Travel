@@ -27,32 +27,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const pathname = usePathname();
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     if (typeof window === "undefined") return;
-  //     const token = localStorage.getItem("acan-portal-token");
-  //     if (!token) {
-  //       setLoading(false);
-  //       return;
-  //     }
-
-  //     const user = await getUser(token);
-  //     if (!user) {
-  //       if (typeof window === "undefined") return;
-  //       localStorage.removeItem("acan-portal-token");
-  //       setLoading(false);
-  //       return;
-  //     }
-  //     if (user.termCondition) {
-  //       router.push("/auth/dashboard");
-  //       return;
-  //     }
-
-  //     router.push("/auth/registration");
-  //   };
-
-  //   fetchData();
-  // }, [pathname, router]);
+  
 
 
   const handleLogin = async () => {
@@ -111,67 +86,137 @@ const LoginPage = () => {
     }
   };
 
+  // const handleSignup = async () => {
+  //   setLoading(true);
+  //   try {
+  //     if (!firstName || !email || !password || !confirmPassword || !lastName) {
+        
+  //     toast.error("Please provide all the fields", {
+  //       style: {
+  //         border: "1px solid #713200",
+  //         padding: "16px",
+  //       },
+  //     });
+  //       return;
+  //     }
+
+  //     if (password === confirmPassword) {
+        
+  //       const response = await axios.post(
+  //         "http://localhost:8000/users/signup",
+  //         { name:firstName + ' '+ middleName+ ' ' + lastName, email, password,passwordConfirm:confirmPassword,role:'user' }
+  //       );
+  //       console.log(response);
+        
+  //     toast.success("Account registered. Please check your email to verify your account.", {
+  //       style: {
+  //         border: "1px solid #713200",
+  //         padding: "16px",
+  //       },
+  //     });
+
+  //       setfirstName("");
+  //       setMiddleName("");
+  //       setLastName("");
+  //       setEmail("");
+  //       setPassword("");
+  //       setConfirmPassword("");
+  //       return;
+  //     }
+      
+  //     toast.error("Password does not match", {
+  //       style: {
+  //         border: "1px solid #713200",
+  //         padding: "16px",
+  //       },
+  //     });
+  //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  //   } catch (err: any) {
+  //     //(err);
+  //     toast.error(err.response?.data?.message || "Signup failed", {
+  //       style: {
+  //         border: "1px solid #713200",
+  //         padding: "16px",
+  //       },
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // if (loading) {
+  //   return null;
+  // }
   const handleSignup = async () => {
     setLoading(true);
     try {
-      if (!firstName || !email || !password || !confirmPassword || !lastName) {
-        
-      toast.error("Please provide all the fields", {
-        style: {
-          border: "1px solid #713200",
-          padding: "16px",
-        },
-      });
+      // Validate Required Fields
+      if (!firstName || !lastName || !email || !password || !confirmPassword) {
+        toast.error("Please provide all fields", {
+          style: { border: "1px solid #713200", padding: "16px" },
+        });
         return;
       }
-
-      if (password === confirmPassword) {
-        
-        const response = await axios.post(
-          "http://localhost:8000/users/signup",
-          { name:firstName + ' '+ middleName+ ' ' + lastName, email, password,passwordConfirm:confirmPassword,role:'user' }
-        );
-        console.log(response);
-        
+  
+      // Validate Email Format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        toast.error("Please enter a valid email address", {
+          style: { border: "1px solid #713200", padding: "16px" },
+        });
+        return;
+      }
+  
+      // Validate Password Length
+      if (password.length < 8) {
+        toast.error("Password must be at least 8 characters long", {
+          style: { border: "1px solid #713200", padding: "16px" },
+        });
+        return;
+      }
+  
+      // Validate Password Match
+      if (password !== confirmPassword) {
+        toast.error("Passwords do not match", {
+          style: { border: "1px solid #713200", padding: "16px" },
+        });
+        return;
+      }
+  
+      // Construct Full Name (Handle optional middle name)
+      const fullName = [firstName, middleName, lastName].filter(Boolean).join(" ");
+  
+      // Send Signup Request
+      const response = await axios.post("http://localhost:8000/users/signup", {
+        name: fullName,
+        email,
+        password,
+        passwordConfirm: confirmPassword,
+        role: "user",
+      });
+  
+      console.log(response);
+  
       toast.success("Account registered. Please check your email to verify your account.", {
-        style: {
-          border: "1px solid #713200",
-          padding: "16px",
-        },
+        style: { border: "1px solid #713200", padding: "16px" },
       });
-
-        setfirstName("");
-        setMiddleName("");
-        setLastName("");
-        setEmail("");
-        setPassword("");
-        setConfirmPassword("");
-        return;
-      }
-      
-      toast.error("Password does not match", {
-        style: {
-          border: "1px solid #713200",
-          padding: "16px",
-        },
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  
+      // Reset Form Fields
+      setfirstName("");
+      setMiddleName("");
+      setLastName("");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
     } catch (err: any) {
-      //(err);
       toast.error(err.response?.data?.message || "Signup failed", {
-        style: {
-          border: "1px solid #713200",
-          padding: "16px",
-        },
+        style: { border: "1px solid #713200", padding: "16px" },
       });
     } finally {
       setLoading(false);
     }
   };
-
-  // if (loading) {
-  //   return null;
-  // }
+  
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
@@ -356,10 +401,10 @@ const LoginPage = () => {
                 </CardContent>
                 <CardFooter className="flex flex-col gap-4">
                   <Button
-                    onClick={handleSignup}
+                    onClick={handleSignup} disabled={loading}
                     className="w-full bg-[#EA580C] text-white hover:bg-[#EA580C]/90 p-6 rounded-lg"
                   >
-                    Create Account
+                   {loading ? 'Creating Account...' : 'Create an Account'}
                   </Button>
                 </CardFooter>
               </Card>
