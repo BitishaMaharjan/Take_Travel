@@ -6,7 +6,7 @@ import 'aos/dist/aos.css';
 import Image from 'next/image'
 import {ASSETS } from '../../../../public/Assets'
 import Link from 'next/link';
-function AboutTravelTrills() {
+function AboutTravelTravel() {
   useEffect(() => {
     AOS.init({
          duration: 800,
@@ -54,4 +54,4 @@ function AboutTravelTrills() {
   )
 }
 
-export default AboutTravelTrills
+export default AboutTravelTravel
