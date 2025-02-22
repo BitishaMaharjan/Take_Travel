@@ -15,7 +15,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Check, X, Plus, Trash, Image as ImageIcon } from 'lucide-react';
+import { Check, X, Plus, Trash, Image as ImageIcon, Edit, Ghost } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -58,6 +58,146 @@ const ControlPanel = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState('');
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  const [editingPackage, setEditingPackage] = useState<Package | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [packageToDelete, setPackageToDelete] = useState<Package | null>(null);
+
+  // Function to handle delete confirmation
+  const handleDeleteConfirm = async () => {
+    if (!packageToDelete) return;
+    
+    try {
+      await axios.delete(`http://localhost:8000/packages/${packageToDelete.id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('take-travel-token')}`
+        }
+      });
+      
+      setPackages(packages.filter(pkg => pkg.id !== packageToDelete.id));
+      toast.success('Package deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete package');
+      console.error('Error deleting package:', error);
+    }
+    
+    setIsDeleteDialogOpen(false);
+    setPackageToDelete(null);
+  };
+
+  // Function to start editing a package
+  const handleEditClick = (pkg: Package) => {
+    setEditingPackage(pkg);
+    setPackageName(pkg.name);
+    setDescription(pkg.description);
+    setOrigin(pkg.origin);
+    setDestination(pkg.destination);
+    setPrice(pkg.price.toString());
+    setDuration(pkg.duration.toString());
+    setDifficulty(pkg.difficulty);
+    setIncludes(pkg.includes);
+    setImagePreviewUrl(pkg.imageBase64 || '');
+  };
+
+  // Function to handle package update
+  const handleUpdatePackage = async (e: FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingPackage) return;
+    
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    
+    const packageData = {
+      name: packageName,
+      description,
+      origin,
+      destination,
+      price: Number(price),
+      duration: Number(duration),
+      difficulty,
+      includes: [...includes],
+      imageBase64: imagePreviewUrl,
+    };
+    
+    try {
+      const result = await axios.patch(
+        `http://localhost:8000/packages/${editingPackage.id}`,
+        packageData,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('take-travel-token')}`
+          }
+        }
+      );
+      
+      if (result.data) {
+        setPackages(packages.map(pkg => 
+          pkg.id === editingPackage.id ? { ...pkg, ...packageData } : pkg
+        ));
+        toast.success('Package updated successfully');
+        
+        // Reset form and exit edit mode
+        resetForm();
+        setEditingPackage(null);
+      }
+    } catch (error) {
+      toast.error('Failed to update package');
+      console.error('Error updating package:', error);
+    }
+  };
+
+  // Function to reset form
+  const resetForm = () => {
+    setPackageName('');
+    setDescription('');
+    setOrigin('');
+    setDestination('');
+    setPrice('');
+    setDuration('');
+    setDifficulty('moderate');
+    setIncludes([]);
+    setImageFile(null);
+    setImagePreviewUrl('');
+    setFormErrors({});
+  };
+
+  // Modify the existing form section to handle both create and update
+
+  // Update the package card rendering to include edit and delete buttons
+
+  // Add delete confirmation dialog
+  const renderDeleteDialog = () => (
+    <dialog
+      open={isDeleteDialogOpen}
+      className="fixed inset-0 flex items-center justify-center bg-black/50"
+    >
+      <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+        <h2 className="text-lg font-semibold">Are you sure?</h2>
+        <p className="text-gray-600 mt-2">
+          This action cannot be undone. This will permanently delete the package
+          and remove its data from our servers.
+        </p>
+        <div className="flex justify-end mt-4 space-x-2">
+          <button
+            onClick={() => setIsDeleteDialogOpen(false)}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleDeleteConfirm}
+            className="px-4 py-2 bg-red-600 text-white rounded-md"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </dialog>
+  );
+  
 
   // Fetch guides function
   const fetchGuides = async () => {
@@ -179,6 +319,40 @@ const ControlPanel = () => {
       return;
     }
     
+    const handleEditClick = (pkg: Package) => {
+      setEditingPackage(pkg);
+      setPackageName(pkg.name);
+      setDescription(pkg.description);
+      setOrigin(pkg.origin);
+      setDestination(pkg.destination);
+      setPrice(pkg.price.toString());
+      setDuration(pkg.duration.toString());
+      setDifficulty(pkg.difficulty);
+      setIncludes(pkg.includes);
+      toast.success('Editing package');
+    };
+
+    const handleUpdatePackage = async () => {
+      if (!editingPackage) return;
+      try {
+        await axios.patch(`http://localhost:8000/packages/${editingPackage.id}`, {
+          name: packageName,
+          description,
+          origin,
+          destination,
+          price: Number(price),
+          duration: Number(duration),
+          difficulty,
+          includes
+        });
+        setPackages(packages.map(pkg => (pkg.id === editingPackage.id ? { ...pkg, name: packageName, description, origin, destination, price: Number(price), duration: Number(duration), difficulty, includes } : pkg)));
+        toast.success('Package updated successfully');
+        resetForm();
+        setEditingPackage(null);
+      } catch (error) {
+        toast.error('Failed to update package');
+      }
+    };
     const packageData = {
       name: packageName,
       description,
@@ -351,7 +525,8 @@ const ControlPanel = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSubmitPackage} className="space-y-4">
+              <form onSubmit={editingPackage ? handleUpdatePackage : handleSubmitPackage} className="space-y-4">
+
                   <div className="space-y-2">
                     <Label htmlFor="packageName">Package Name</Label>
                     <Input 
@@ -514,53 +689,71 @@ const ControlPanel = () => {
                           }
                         }}
                       />
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={handleAddInclude}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
+                     
                     </div>
                     
                     <div className="space-y-2">
                       {includes.map((item, index) => (
                         <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
                           <span className="text-sm">{item}</span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveInclude(index)}
-                          >
-                            <Trash className="h-4 w-4" />
-                          </Button>
+                          
                         </div>
                       ))}
                     </div>
                   </div>
                   
                   <Button 
-                  onClick={(e)=>handleSubmitPackage(e)}
-                  className="w-full">
-                    Add Package
-                  </Button>
+    type="submit"
+    className="w-full"
+    onClick={editingPackage? (e)=> handleUpdatePackage(e):(e)=> handleSubmitPackage(e)}
+
+  >
+    {editingPackage ? (
+      <>
+        <Edit className="h-4 w-4 mr-2" />
+        Update Package
+      </>
+    ) : (
+      <>
+        <Plus className="h-4 w-4 mr-2" />
+        Add Package
+      </>
+    )}
+  </Button>
+  
+  {editingPackage && (
+    <Button 
+      type="button"
+      variant="outline"
+      className="w-full"
+      onClick={() => {
+        resetForm();
+        setEditingPackage(null);
+      }}
+    >
+      <X className="h-4 w-4 mr-2" />
+      Cancel Edit
+    </Button>
+  )}
+  
                 </form>
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="flex flex-col h-[1000px]">
+
               <CardHeader>
                 <CardTitle>Existing Packages</CardTitle>
                 <CardDescription>
                   View and manage current tour packages
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-1 overflow-y-auto">
                 {!packages || packages.length === 0 ? (
                   <p className="text-muted-foreground">No packages available</p>
                 ) : (
-                  <div className="space-y-4">
+                
+  <div className="space-y-4 ">
                     {packages.map((pkg) => {
                       if (!pkg) return null;
                       
@@ -595,7 +788,7 @@ const ControlPanel = () => {
                                     {pkg.description || 'No description available'}
                                   </p>
                                 </div>
-                                <Badge variant="secondary">
+                                <Badge color='red'>
                                   ${typeof pkg.price === 'number' ? pkg.price.toFixed(2) : '0.00'}
                                 </Badge>
                               </div>
@@ -626,82 +819,70 @@ const ControlPanel = () => {
                                 </Badge>
                               ))}
                             </div>
+                            <div className="mt-4 flex justify-end space-x-2">
+        <Button
+        variant="link"          size="sm"
+          onClick={() => handleEditClick(pkg)}
+        >
+          <Edit className="h-4 w-4 mr-1 " /> 
+        </Button>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => {
+            setPackageToDelete(pkg);
+            setIsDeleteDialogOpen(true);
+          }}
+        >
+          <Trash className="h-4 w-4 mr-1 " /> 
+        </Button>
+       
+      </div>
                           </div>
                         </motion.div>
                       );
                     })}
                   </div>
+                 
                 )}
               </CardContent>
             </Card>
-          {/* <Card>
-  <CardHeader>
-    <CardTitle>Existing Packages</CardTitle>
-    <CardDescription>View and manage current tour packages</CardDescription>
-  </CardHeader>
-  <CardContent>
-    {packages.length === 0 ? (
-      <p className="text-muted-foreground">No packages available</p>
-    ) : (
-      <div className="space-y-4">
-        {packages.map((pkg:any) => (
-          <motion.div
-            key={pkg.id}
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="border rounded-lg p-4"
-          >
-            <div className="flex flex-col md:flex-row gap-4 mb-3">
-              {pkg.imageUrl && (
-                <div className="w-full md:w-24 h-24 bg-muted rounded-md overflow-hidden">
-                  <img 
-                    src={pkg.imageUrl} 
-                    alt={pkg.name} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-              <div className="flex-1">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <h3 className="font-medium">{pkg.name}</h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{pkg.description}</p>
-                  </div>
-                  <Badge variant="secondary">${pkg.price}</Badge>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 text-sm">
-                  <div>
-                    <span className="font-medium">Origin:</span> {pkg.origin}
-                  </div>
-                  <div>
-                    <span className="font-medium">Destination:</span> {pkg.destination}
-                  </div>
-                  <div>
-                    <span className="font-medium">Duration:</span> {pkg.duration} days
-                  </div>
-                  <div>
-                    <span className="font-medium">Difficulty:</span> {pkg.difficulty}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-2">
-              <p className="text-sm font-medium mb-1">Includes:</p>
-              <div className="flex flex-wrap gap-1">
-                {/* {pkg.includes.map((item:any, index:any) => (
-                  <Badge key={index} variant="outline" className="text-xs">
-                    {item}
-                  </Badge>
-                ))} */}
       
 
           </div>
         </TabsContent>
       </Tabs>
+      {isDeleteDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-96">
+            <CardHeader>
+              <CardTitle>Confirm Delete</CardTitle>
+              <CardDescription>
+                Are you sure you want to delete {packageToDelete?.name}? This action cannot be undone.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsDeleteDialogOpen(false);
+                  setPackageToDelete(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteConfirm}
+              >
+                Delete
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </motion.div>
+    
   );
 };
 
