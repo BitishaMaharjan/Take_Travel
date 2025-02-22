@@ -18,31 +18,39 @@ import { BookingCard, BookingDetails } from '@/components/cards/BookingCard';
 import axios from 'axios';
 
 // Define interfaces for the API data structure
+interface Booking {
+  _id: string;
+  packageId: Package;
+  userId: UserInterface;
+  guideId: Guide;
+  startDate: string;
+  endDate: string;
+  status: string;  // Adjust based on possible statuses
+  totalPrice: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  id: string;
+}
+
 interface Package {
   _id: string;
   name: string;
   price: number;
   duration: number;
+  imageBase64: string;
+  id: string;
 }
 
-interface User {
+interface UserInterface {
   _id: string;
   name: string;
   email: string;
 }
 
-interface Booking {
+interface Guide {
   _id: string;
-  createdAt: string;
-  endDate: string;
-  guideId: string;
-  id: string;
-  packageId: Package;
-  startDate: string;
-  status: string;
-  totalPrice: number;
-  updatedAt: string;
-  userId: User;
+  name: string;
 }
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];

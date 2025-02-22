@@ -4,27 +4,42 @@ import React, { useEffect, useState } from 'react';
 import { Calendar, Clock, MapPin, AlertCircle, CheckCircle, User } from 'lucide-react';
 import axios from 'axios';
 
-interface Guide {
-  name: string;
-  languages: string[];
-  experience: number;
-  contactNumber: string;
-}
 
 interface Booking {
-  id: string;
-  destination: string;
+  _id: string;
+  packageId: Package;
+  userId: UserInterface;
+  guideId: Guide;
   startDate: string;
   endDate: string;
-  status: 'upcoming' | 'completed';
-  cost: string;
-  image: string;
-  paymentStatus: 'paid' | 'pending';
-  bookingReference: string;
-  travelers: number;
-  itinerary: string[];
-  guide?: Guide;
+  status: string;  // Adjust based on possible statuses
+  totalPrice: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  id: string;
 }
+
+interface Package {
+  _id: string;
+  name: string;
+  price: number;
+  duration: number;
+  imageBase64: string;
+  id: string;
+}
+
+interface UserInterface {
+  _id: string;
+  name: string;
+  email: string;
+}
+
+interface Guide {
+  _id: string;
+  name: string;
+}
+
 
 interface BookingCardProps {
   booking: Booking;
@@ -36,35 +51,6 @@ interface BookingDetailsProps {
   onClose: () => void;
 }
 
-// Transform API response to match Booking interface
-const mapApiResponseToBookings = (apiResponse: any[]): Booking[] => {
-  return apiResponse.map(item => {
-    const packageDetails = item.packageId;
-    const guideDetails = item.guideId;
-    
-    const booking: Booking = {
-      id: item._id,
-      destination: packageDetails.destination,
-      startDate: item.startDate.split('T')[0], // Convert to YYYY-MM-DD format
-      endDate: item.endDate.split('T')[0],
-      status: new Date(item.endDate) < new Date() ? 'completed' : 'upcoming',
-      cost: `$${packageDetails.price.toLocaleString()}`,
-      image: packageDetails.images?.[0] || "/api/placeholder/400/300",
-      paymentStatus: item.paymentStatus === 'PAID' ? 'paid' : 'pending',
-      bookingReference: item._id.slice(-8).toUpperCase(),
-      travelers: item.numberOfPeople || 1,
-      itinerary: packageDetails.itinerary?.map((day: any) => day.description) || [],
-      guide: guideDetails ? {
-        name: `${guideDetails.firstName} ${guideDetails.lastName}`,
-        languages: guideDetails.languages || [],
-        experience: guideDetails.experience || 0,
-        contactNumber: guideDetails.phoneNumber || 'Contact information not available'
-      } : undefined
-    };
-
-    return booking;
-  });
-};
 
 const BookingCard: React.FC<BookingCardProps> = ({ booking, onViewDetails }) => {
   const formatDate = (dateString: string): string => {
@@ -80,24 +66,24 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onViewDetails }) => 
       <div className="relative">
         <img
         //hello
-          src={booking.image}
-          alt={booking.destination}
+          src={booking.packageId.imageBase64}
+          alt={booking.packageId.name}
           className="w-full h-48 object-cover"
         />
-        <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
+        {/* <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
           booking.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
         }`}>
           {booking.paymentStatus === 'paid' ? 'Paid' : 'Payment Pending'}
-        </div>
+        </div> */}
       </div>
       
       <div className="p-6">
         <div className="flex justify-between items-start mb-4">
           <div>
-            <h3 className="text-xl font-semibold mb-2">{booking.destination}</h3>
-            <p className="text-gray-600 text-sm mb-2">Booking Ref: {booking.bookingReference}</p>
+            <h3 className="text-xl font-semibold mb-2">{booking.packageId.name}</h3>
+            <p className="text-gray-600 text-sm mb-2">Booking Ref: {booking.packageId.name}</p>
           </div>
-          <span className="text-lg font-semibold text-orange-600">{booking.cost}</span>
+          <span className="text-lg font-semibold text-orange-600">{booking.packageId.price}</span>
         </div>
 
         <div className="space-y-2 mb-4">
@@ -107,14 +93,14 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onViewDetails }) => 
               {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
             </span>
           </div>
-          <div className="flex items-center text-gray-600">
+          {/* <div className="flex items-center text-gray-600">
             <Clock className="w-4 h-4 mr-2" />
-            <span className="text-sm">{booking.travelers} Travelers</span>
-          </div>
-          {booking.guide && (
+            <span className="text-sm">{booking.} Travelers</span>
+          </div> */}
+          {booking.guideId && (
             <div className="flex items-center text-gray-600">
               <User className="w-4 h-4 mr-2" />
-              <span className="text-sm">Guide: {booking.guide.name === undefined ? booking.guide.name : "Not assigned"}
+              <span className="text-sm">Guide: {booking.guideId.name}
               </span>
             </div>
           )}
@@ -145,7 +131,7 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose }) => 
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
-            <h3 className="text-2xl font-semibold">{booking.destination}</h3>
+            <h3 className="text-2xl font-semibold">{booking.packageId.name}</h3>
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700"
@@ -155,23 +141,23 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose }) => 
           </div>
 
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <span className="text-gray-600">Booking Reference</span>
-              <span className="font-medium">{booking.bookingReference}</span>
-            </div>
+              <span className="font-medium">{booking.}</span>
+            </div> */}
 
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <span className="text-gray-600">Status</span>
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                 booking.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
               }`}>
                 {booking.paymentStatus === 'paid' ? 'Paid' : 'Payment Pending'}
               </span>
-            </div>
+            </div> */}
 
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Total Cost</span>
-              <span className="font-medium text-orange-600">{booking.cost}</span>
+              <span className="font-medium text-orange-600">{booking.packageId.price}</span>
             </div>
 
             <div className="border-t pt-4">
@@ -183,27 +169,27 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose }) => 
                     {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
                   </span>
                 </div>
-                <div className="flex items-center text-gray-600">
+                {/* <div className="flex items-center text-gray-600">
                   <Clock className="w-4 h-4 mr-2" />
                   <span>{booking.travelers} Travelers</span>
-                </div>
+                </div> */}
               </div>
             </div>
 
-            {booking.guide ? (
+            {booking.guideId ? (
   <div className="border-t pt-4">
     <h4 className="font-medium mb-3">Your Guide</h4>
     <div className="bg-gray-50 p-4 rounded-lg space-y-3">
       <div className="flex items-center">
         <User className="w-5 h-5 mr-2 text-gray-600" />
         <span className="font-medium">
-          {booking.guide.name === undefined ? booking.guide.name : "Not assigned"}
+          {booking.guideId.name === undefined ? booking.guideId.name : "Not assigned"}
         </span>
       </div>
       <div className="space-y-2 text-sm text-gray-600">
-        <p>Languages: {booking.guide.languages?.join(", ") || "N/A"}</p>
-        <p>{booking.guide.experience ? `${booking.guide.experience} years of experience` : "Experience not available"}</p>
-        <p>Contact: {booking.guide.contactNumber || "Not available"}</p>
+        {/* <p>Languages: {booking.guideId.languages?.join(", ") || "N/A"}</p> */}
+        {/* <p>{booking.guide.experience ? `${booking.guide.experience} years of experience` : "Experience not available"}</p> */}
+        {/* <p>Contact: {booking.guide.contactNumber || "Not available"}</p> */}
       </div>
     </div>
   </div>
@@ -219,7 +205,7 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose }) => 
 
 
 
-            <div className="border-t pt-4">
+            {/* <div className="border-t pt-4">
               <h4 className="font-medium mb-3">Itinerary Overview</h4>
               <ul className="space-y-2">
                 {booking.itinerary.map((item, index) => (
@@ -229,7 +215,7 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose }) => 
                   </li>
                 ))}
               </ul>
-            </div>
+            </div> */}
 
             {booking.status === 'upcoming' && (
               <div className="border-t pt-4">
@@ -237,7 +223,7 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose }) => 
                   <AlertCircle className="w-5 h-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-blue-800">
                     Your trip is coming up! Make sure to check your email for important travel documents and pre-departure information.
-                    {booking.guide && " Your guide will contact you 48 hours before the trip starts."}
+                    {booking.guideId && " Your guide will contact you 48 hours before the trip starts."}
                   </p>
                 </div>
               </div>
@@ -270,9 +256,8 @@ const MyBookingsPage: React.FC = () => {
             }
           }
         );
-
-        const mappedBookings = mapApiResponseToBookings(response.data.data.bookings);
-        setData(mappedBookings);
+        console.log(response.data.data.bookings)
+        setData(response.data.data.bookings);
       } catch (error) {
         console.error('Error fetching bookings:', error);
         setError('Failed to load bookings. Please try again later.');
@@ -285,7 +270,6 @@ const MyBookingsPage: React.FC = () => {
     getGuideBookings();
   }, []);
 
-  const filteredBookings = data.filter(booking => booking.status === activeTab);
 
   if (loading) {
     return (
@@ -332,9 +316,9 @@ const MyBookingsPage: React.FC = () => {
         </button>
       </div>
 
-      {filteredBookings.length > 0 ? (
+      {data.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredBookings.map((booking) => (
+          {data.map((booking) => (
             <BookingCard 
               key={booking.id} 
               booking={booking} 
