@@ -4,8 +4,8 @@ import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import {ASSETS} from '../../../../public/Assets'
-import NewsLetter from '@/components/template/home/subhome/NewsLetter'
 import { usePathname } from 'next/navigation'
+import NewsLetter from '@/components/template/home/subhome/NewsLetter'
 function Footer() {
   const pathname = usePathname()
 
