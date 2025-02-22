@@ -8,7 +8,6 @@ export const ASSETS = {
     booking:'/icon/booking.png',
     blog_banner:'/images/banner-blog.png',
     about_banner:'/images/banner-about.png',
-    booking_banner:'/images/banner-book.png',
     planner_banner:'/images/banner-planner.png',
     contact_banner:'/images/banner-contact.png',
     about_us:'/images/about-us.png',
