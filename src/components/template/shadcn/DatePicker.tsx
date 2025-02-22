@@ -12,6 +12,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { toast } from "sonner";
 
 export function DatePickerWithRange({
   className,
@@ -32,16 +33,18 @@ export function DatePickerWithRange({
       to: selectedRange.to,
     });
 
-    // Dispatch actions after state update
-    const fromDate = selectedRange.from.toISOString();
-    const toDate = selectedRange.to.toISOString();
-    dispatch(DATEFROM(fromDate));
-    dispatch(DATETO(toDate));
 
-    // if (date?.from && date?.to) {
-    //   const daysDifference = differenceInDays(date.to, date.from);
-    //   dispatch(Days(daysDifference));
-    // }
+    if (selectedRange && selectedRange.from && selectedRange.to) {
+      const fromDate = selectedRange.from.toISOString();
+      const toDate = selectedRange.to.toISOString();
+  
+      dispatch(DATEFROM(fromDate));
+      dispatch(DATETO(toDate));
+    } else {
+     
+      console.error('Selected date range is invalid:', selectedRange);
+      toast.message("Selected date range is invalid");
+    }
   };
 
   return (
