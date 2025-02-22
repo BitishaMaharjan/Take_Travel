@@ -4,32 +4,41 @@
 import React from 'react';
 import { Calendar, Clock, MapPin, AlertCircle, CheckCircle, User } from 'lucide-react';
 
+interface Booking {
+  _id: string;
+  packageId: Package;
+  userId: UserInterface;
+  guideId: Guide;
+  startDate: string;
+  endDate: string;
+  status: string;  // Adjust based on possible statuses
+  totalPrice: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  id: string;
+}
+
 interface Package {
   _id: string;
   name: string;
   price: number;
   duration: number;
+  imageBase64: string;
+  id: string;
 }
 
-interface User {
+interface UserInterface {
   _id: string;
   name: string;
   email: string;
 }
 
-interface Booking {
+interface Guide {
   _id: string;
-  createdAt: string;
-  endDate: string;
-  guideId: string;
-  id: string;
-  packageId: Package;
-  startDate: string;
-  status: string;
-  totalPrice: number;
-  updatedAt: string;
-  userId: User;
+  name: string;
 }
+
 interface BookingCardProps {
   booking: Booking;
   onViewDetails: (booking: Booking) => void;
@@ -71,7 +80,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking, onViewDetails
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="relative">
         <img
-          src="/api/placeholder/400/200"
+          src={booking.packageId.imageBase64}
           alt={booking.packageId.name}
           className="w-full h-48 object-cover"
         />
@@ -182,7 +191,7 @@ export const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose
                 <div className="bg-gray-50 p-4 rounded-lg space-y-3">
                   <div className="flex items-center">
                     <User className="w-5 h-5 mr-2 text-gray-600" />
-                    <span className="font-medium">{booking.guideId}</span>
+                    {/* <span className="font-medium">{booking.guideId}</span> */}
                   </div>
                   {/* <div className="space-y-2 text-sm text-gray-600">
                     <p>Languages: {booking.guide.languages.join(", ")}</p>

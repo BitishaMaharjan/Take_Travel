@@ -87,6 +87,15 @@ const TravelDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(()=>{
+    const fetchGuides = async()=>{
+      const response = await axios.get('http://localhost:8000/users/all-guides')
+      
+    setGuides(response.data.data.users)
+    }
+    fetchGuides()
+  },[])
+
   useEffect(() => {
     const fetchData = async () => {
       try {
