@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Calendar, Clock, MapPin, AlertCircle, User, Phone, Mail, Globe2, Users, PieChart as PieChartIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -17,6 +17,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { BookingCard } from '@/components/cards/BookingCard';
+import axios from 'axios';
 
 // Previous interfaces remain the same...
 
@@ -160,6 +161,29 @@ const UpcomingReminders: React.FC = () => {
 const GuideDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'completed'>('upcoming');
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  useEffect(()=>{
+    const getGuideBookings = async () => {
+      try {
+        const response = await axios.post(`http://localhost:8000/bookings/guide-bookings`, 
+          { guideId:localStorage.getItem('take-travel-userId') }, 
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+    
+        console.log('Bookings:', response.data.data.bookings);
+        return response.data.data.bookings;
+      } catch (error) {
+        console.error('Error fetching guide bookings:');
+        throw error;
+      }
+    };
+    
+    // Example Usage
+    getGuideBookings();
+  },[])
 
   const filteredBookings = mockGuideBookings.filter((booking:any) => 
     activeTab === 'upcoming' ? booking.status !== 'completed' : booking.status === 'completed'

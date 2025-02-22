@@ -27,7 +27,7 @@ function Header() {
       setUserRole(response.data.data.doc.role);
     }
     getUser()
-  },[pathname,router])
+  },[router])
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);

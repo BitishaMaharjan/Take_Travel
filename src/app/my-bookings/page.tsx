@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Calendar, Clock, MapPin, AlertCircle, CheckCircle, User } from 'lucide-react';
+import axios from 'axios';
 
 interface Guide {
   name: string;
@@ -279,7 +280,29 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose }) => 
 const MyBookingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'completed'>('upcoming');
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-
+  useEffect(()=>{
+    const getGuideBookings = async () => {
+      try {
+        const response = await axios.post(`http://localhost:8000/bookings/user-bookings`, 
+          { userId:localStorage.getItem('take-travel-userId') }, 
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+    
+        console.log('Bookings:', response.data.data.bookings);
+        return response.data.data.bookings;
+      } catch (error) {
+        console.error('Error fetching guide bookings:');
+        throw error;
+      }
+    };
+    
+    // Example Usage
+    getGuideBookings();
+  },[])
   const filteredBookings = mockBookings.filter(booking => booking.status === activeTab);
 
   return (
