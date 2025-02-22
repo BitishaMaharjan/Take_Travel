@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, X as XIcon, CheckCircle, AlertCircle } from 'lucide-react';
+import { X, Plus, X as XIcon, CheckCircle, AlertCircle, Loader } from 'lucide-react';
 import axios from 'axios';
 
 interface TourGuideModalProps {
@@ -47,27 +47,43 @@ const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
   const [selectedLanguage, setSelectedLanguage] = useState<string>('');
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [loading, setLoading] = useState(false);
 
-  const availableLanguages: string[] = [
-    'English', 'Spanish', 'French', 'German', 'Italian', 'Chinese', 'Japanese',
-    'Arabic', 'Russian', 'Portuguese', 'Hindi', 'Korean', 'Thai', 'Vietnamese', 'Turkish'
-  ].sort();
+  const validateForm = (): boolean => {
+    const errors: ValidationErrors = {};
+    if (!formData.name.trim()) errors.name = 'Full Name is required';
+    if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) errors.email = 'Invalid email format';
+    if (!formData.phoneNumber.match(/^\d{10}$/)) errors.phoneNumber = 'Phone number must be 10 digits';
+    if (!formData.experience || isNaN(Number(formData.experience)) || Number(formData.experience) < 0) errors.experience = 'Experience must be a positive number';
+    if (!formData.languages.length) errors.languages = 'At least one language is required';
+    if (!formData.specialization) errors.specialization = 'Specialization is required';
+    if (formData.password.length < 8) errors.password = 'Password must be at least 6 characters';
+    if (formData.password !== formData.passwordConfirm) errors.passwordConfirm = 'Passwords do not match';
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
-  const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setValidationErrors({});
-
+  
+    if (!validateForm()) return;
+    setLoading(true);
+  
     try {
       const response = await axios.post('http://localhost:8000/users/signup/guide', formData);
-      console.log(response.data);
+      console.log("Registration Successful:", response.data);
+  
+      // Close the modal and redirect (modify based on your routing)
       onClose();
-      setIsSuccessModalOpen(true);
+      window.location.href = "/auth"; // Change the route as needed
+  
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         if (error.response.status === 400) {
           const errorData = error.response.data;
           if (errorData.errors) {
-            setValidationErrors(errorData.errors);
+            setValidationErrors(errorData.errors); // Map errors correctly
           } else if (typeof errorData.message === 'string') {
             setValidationErrors({ general: errorData.message });
           }
@@ -75,8 +91,16 @@ const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
       } else {
         setValidationErrors({ general: 'An unexpected error occurred. Please try again.' });
       }
+    }finally {
+      setLoading(false); // Stop loading
     }
   };
+  
+  const availableLanguages: string[] = [
+    'English', 'Spanish', 'French', 'German', 'Italian', 'Chinese', 'Japanese',
+    'Arabic', 'Russian', 'Portuguese', 'Hindi', 'Korean', 'Thai', 'Vietnamese', 'Turkish'
+  ].sort();
+
 
   const getFieldError = (fieldName: string) => {
     return validationErrors[fieldName];
@@ -363,9 +387,17 @@ const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
 
           <button
             type="submit"
-            className="w-full bg-orange-600 text-white py-2 px-4 rounded-md hover:bg-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors"
+            className="w-full bg-orange-600 text-white py-2 px-4 rounded-md hover:bg-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors flex justify-center items-center"
+            disabled={loading}
           >
-            Register
+            {loading ? (
+              <>
+                <Loader className="animate-spin mr-2" size={20} />
+                Registering...
+              </>
+            ) : (
+              "Register"
+            )}
           </button>
         </form>
       </div>
