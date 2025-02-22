@@ -127,68 +127,12 @@ const NearbyPage = () => {
     }
   };
 
-  // Fetch places using Overpass API with correct amenity tags
-//   const fetchNearbyPlaces = async (location: Location, type: string) => {
-//     let amenityTag = type;
-//     switch (type) {
-//       case "taxi":
-//         amenityTag = "taxi";
-//         break;
-//       case "bus":
-//         amenityTag = "bus_station";
-//         break;
-//       case "hotel":
-//         amenityTag = "hotel";
-//         break;
-//       case "restaurant":
-//         amenityTag = "restaurant";
-//         break;
-//       default:
-//         amenityTag = type;
-//     }
 
-//     const overpassQuery = `
-//       [out:json];
-//       (
-//         node["amenity"="${amenityTag}"](around:5000, ${location.lat}, ${location.lng});
-//         way["amenity"="${amenityTag}"](around:5000, ${location.lat}, ${location.lng});
-//         node["tourism"="hotel"](around:5000, ${location.lat}, ${location.lng});
-//         way["tourism"="hotel"](around:5000, ${location.lat}, ${location.lng});
-//         node["highway"="bus_stop"](around:5000, ${location.lat}, ${location.lng});  // Include bus stops
-
-//       );
-//       out center;
-//     `;
-    
-//     const overpassURL = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(
-//       overpassQuery
-//     )}`;
-
-//     try {
-//       const response = await axios.get(overpassURL);
-//       const placeData = response.data.elements.map((place: any) => ({
-//         name: place.tags.name || `Unnamed ${type}`,
-//         lat: place.lat || place.center.lat,
-//         lng: place.lon || place.center.lon,
-//         type
-//       }));
-//       setPlaces(placeData);
-//     } catch (error) {
-//       console.error(`Error fetching ${type}:`, error);
-//       setPlaces([]);
-//     }
-//   };
 const fetchNearbyPlaces = async (location: Location, type: string) => {
     let queryCondition = "";
   
     // Determine the correct OSM tag based on the place type
     switch (type) {
-      case "taxi":
-        queryCondition = `
-          node["amenity"="taxi"](around:5000, ${location.lat}, ${location.lng});
-          node["public_transport"="taxi_station"](around:5000, ${location.lat}, ${location.lng});
-        `;
-        break;
       case "bus":
         queryCondition = `
           node["amenity"="bus_station"](around:5000, ${location.lat}, ${location.lng});
@@ -275,7 +219,6 @@ const fetchNearbyPlaces = async (location: Location, type: string) => {
           <SelectContent>
             <SelectItem value="restaurant">Restaurants</SelectItem>
             <SelectItem value="hotel">Hotels</SelectItem>
-            <SelectItem value="taxi">Taxi Stands</SelectItem>
             <SelectItem value="heritage">Heritage</SelectItem>
 
             
