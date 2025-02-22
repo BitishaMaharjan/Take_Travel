@@ -5,17 +5,79 @@ import Link from "next/link";
 import axios from "axios";
 import { ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { useSearchParams, usePathname, useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
 
 const ITEMS_PER_PAGE = 6;
 
 const ExplorePage = () => {
+  const router = useRouter();  // Initialize router to update URL
+
   const [searchQuery, setSearchQuery] = useState("");
   const [priceRange, setPriceRange] = useState("");
   const [duration, setDuration] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [packages, setPackages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false); // Track errors
+  const [error, setError] = useState(false);
+  
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const formData = useSelector((state: any) => state.formData);
+
+  // Get data from URL parameters
+  const destination = searchParams.get('destination');
+  const dateFrom = searchParams.get('dateFrom');
+  const dateTo = searchParams.get('dateTo');
+
+  const { destination: reduxDestination, dateFrom: reduxDateFrom, dateTo: reduxDateTo } = formData;
+
+  // Reset filters
+  const resetFilters = () => {
+    setSearchQuery("");
+    setPriceRange("");
+    setDuration("");
+    setCurrentPage(1);
+    router.push('/explore');  // This will update the URL without the filters
+
+  };
+
+  // Handle page navigation (back/forward)
+  useEffect(() => {
+    resetFilters();
+    
+    // Set initial search query from URL or Redux
+    const initialDestination = destination || reduxDestination;
+    if (initialDestination) {
+      setSearchQuery(initialDestination);
+    }
+
+    // Calculate and set duration from dates
+    const dates = {
+      from: dateFrom || reduxDateFrom,
+      to: dateTo || reduxDateTo
+    };
+
+    if (dates.from && dates.to) {
+      const tripDuration = calculateDateDifference(dates.from, dates.to);
+      if (tripDuration) {
+        setDuration(tripDuration);
+      }
+    }
+  }, [pathname, destination, dateFrom, dateTo]);
+
+  // Calculate date difference
+  const calculateDateDifference = (from: string, to: string) => {
+    if (!from || !to) return null;
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+    const diffTime = Math.abs(toDate.getTime() - fromDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays <= 7) return "short";
+    if (diffDays <= 14) return "medium";
+    return "long";
+  };
 
   const getPackage = async () => {
     setLoading(true);
@@ -28,7 +90,7 @@ const ExplorePage = () => {
         toast.error("Request timed out. Please try again.");
         setError(true);
         setLoading(false);
-      }, 10000); // 10 sec timeout
+      }, 10000);
 
       const result = await axios.get("http://localhost:8000/packages/", {
         headers: {
@@ -53,16 +115,35 @@ const ExplorePage = () => {
   };
 
   useEffect(() => {
+    resetFilters();
     getPackage();
   }, []);
+
+  // Handle manual filter changes
+  const handleFilterChange = (type: string, value: string) => {
+    switch (type) {
+      case 'search':
+        setSearchQuery(value);
+        break;
+      case 'price':
+        setPriceRange(value);
+        break;
+      case 'duration':
+        setDuration(value);
+        break;
+    }
+    setCurrentPage(1); // Reset to first page when filters change
+  };
 
   const filteredPackages = useMemo(() => {
     return packages.filter((pkg) => {
       const matchesSearch = searchQuery
-        ? pkg.name?.toLowerCase().includes(searchQuery.toLowerCase())
+        ? pkg.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          pkg.destination?.toLowerCase().includes(searchQuery.toLowerCase())
         : true;
-      const cost = pkg.cost ? parseInt(pkg.cost.replace(/[^0-9]/g, "")) : 0;
-      const days = pkg.trip ? parseInt(pkg.trip.replace(/[^0-9]/g, "")) : 0;
+
+      const cost = pkg.price ? parseInt(pkg.price.toString().replace(/[^0-9]/g, "")) : 0;
+      const days = pkg.duration ? parseInt(pkg.duration.toString().replace(/[^0-9]/g, "")) : 0;
 
       const matchesPrice =
         !priceRange ||
@@ -105,13 +186,13 @@ const ExplorePage = () => {
               placeholder="Search destinations..."
               className="w-full p-3 border rounded-lg"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleFilterChange('search', e.target.value)}
             />
           </div>
           <select 
             className="p-3 border rounded-lg"
             value={priceRange}
-            onChange={(e) => setPriceRange(e.target.value)}
+            onChange={(e) => handleFilterChange('price', e.target.value)}
           >
             <option value="">Price Range</option>
             <option value="0-5000">$0 - $5k</option>
@@ -121,16 +202,22 @@ const ExplorePage = () => {
           <select 
             className="p-3 border rounded-lg"
             value={duration}
-            onChange={(e) => setDuration(e.target.value)}
+            onChange={(e) => handleFilterChange('duration', e.target.value)}
           >
             <option value="">Duration</option>
             <option value="short">1-7 days</option>
             <option value="medium">8-14 days</option>
             <option value="long">15+ days</option>
           </select>
+          <button
+            onClick={resetFilters}
+            className="px-3 border w-17  h-13  text-white rounded-lg bg-red-400 hover:bg-red-200 transition-colors"
+          >
+            ↻ Reset 
+          </button>
         </div>
 
-        {/* Loading & Error Handling */}
+        {/* Loading & Error States */}
         {loading ? (
           <div className="text-center text-gray-500 text-lg">Loading packages...</div>
         ) : error ? (
@@ -148,11 +235,11 @@ const ExplorePage = () => {
               {filteredPackages.length} packages
             </div>
 
-            {/* Package List */}
+            {/* Package Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {paginatedPackages.map((pkg) => (
                 <div
-                  key={pkg.name}
+                  key={pkg.id || pkg.name}
                   className="rounded-xl overflow-hidden shadow-lg bg-white hover:shadow-xl transition-shadow duration-300"
                 >
                   <img
@@ -171,16 +258,16 @@ const ExplorePage = () => {
                     <span className="font-normal">{pkg.destination}</span>
                     <div className="flex items-center text-gray-600">
                       <Clock className="w-4 h-4" />
-                      <span className="ml-2 text-sm">{pkg.duration} duration</span>
+                      <span className="ml-2 text-sm">{pkg.duration} days</span>
                     </div>
                     <div className="mt-4 flex gap-4 justify-center">
                       <Link href={`/country-detail/${pkg.id}`} className="w-3/5">
-                        <button className="w-full  bg-[#43B97F] text-white py-3 rounded-lg hover:ring-2 hover:ring-[#43B97F] transition">
+                        <button className="w-full bg-[#43B97F] text-white py-3 rounded-lg hover:ring-2 hover:ring-[#43B97F] transition">
                           More Details
                         </button>
                       </Link>
                       <Link href={`/book-now`} className="w-3/5">
-                        <button className="w-full  bg-orange-600 text-white py-3 rounded-lg hover:ring-2 hover:ring-orange-400 transition">
+                        <button className="w-full bg-orange-600 text-white py-3 rounded-lg hover:ring-2 hover:ring-orange-400 transition">
                           Book Now
                         </button>
                       </Link>
@@ -192,21 +279,35 @@ const ExplorePage = () => {
 
             {/* Pagination */}
             <div className="mt-8 flex justify-center items-center gap-2">
-              <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded-lg border">
+              <button 
+                onClick={() => handlePageChange(currentPage - 1)} 
+                disabled={currentPage === 1} 
+                className="p-2 rounded-lg border disabled:opacity-50"
+              >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               {[...Array(totalPages)].map((_, index) => (
-                <button key={index} onClick={() => handlePageChange(index + 1)} className="w-10 h-10 rounded-lg border">
+                <button 
+                  key={index} 
+                  onClick={() => handlePageChange(index + 1)} 
+                  className={`w-10 h-10 rounded-lg border ${
+                    currentPage === index + 1 ? 'bg-orange-600 text-white' : ''
+                  }`}
+                >
                   {index + 1}
                 </button>
               ))}
-              <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 rounded-lg border">
+              <button 
+                onClick={() => handlePageChange(currentPage + 1)} 
+                disabled={currentPage === totalPages} 
+                className="p-2 rounded-lg border disabled:opacity-50"
+              >
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
           </>
         ) : (
-          <div className="text-center text-gray-500 text-lg">No Packages Available</div>
+          <div className="text-center text-gray-500 text-lg">No packages found matching your criteria</div>
         )}
       </div>
     </section>
