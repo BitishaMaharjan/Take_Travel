@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, X as XIcon } from 'lucide-react';
+import { X, Plus, X as XIcon, CheckCircle, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 
 interface TourGuideModalProps {
@@ -12,14 +12,24 @@ interface FormData {
   email: string;
   phoneNumber: string;
   experience: string;
-  role:string
+  role: string;
   languages: string[];
   specialization: string;
   password: string;
   passwordConfirm: string;
 }
 
-type Specialization = 'cultural' | 'adventure' | 'historical' | 'nature' | 'food';
+interface ValidationErrors {
+  [key: string]: string;
+}
+const CustomAlert: React.FC<{ message: string }> = ({ message }) => (
+  <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded">
+    <div className="flex items-center">
+      <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+      <p className="text-red-700">{message}</p>
+    </div>
+  </div>
+);
 
 const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState<FormData>({
@@ -27,7 +37,7 @@ const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
     email: '',
     phoneNumber: '',
     experience: '',
-    role:'guide',
+    role: 'guide',
     languages: [],
     specialization: '',
     password: '',
@@ -35,33 +45,41 @@ const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
   });
 
   const [selectedLanguage, setSelectedLanguage] = useState<string>('');
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
 
   const availableLanguages: string[] = [
-    'English',
-    'Spanish',
-    'French',
-    'German',
-    'Italian',
-    'Chinese',
-    'Japanese',
-    'Arabic',
-    'Russian',
-    'Portuguese',
-    'Hindi',
-    'Korean',
-    'Thai',
-    'Vietnamese',
-    'Turkish'
+    'English', 'Spanish', 'French', 'German', 'Italian', 'Chinese', 'Japanese',
+    'Arabic', 'Russian', 'Portuguese', 'Hindi', 'Korean', 'Thai', 'Vietnamese', 'Turkish'
   ].sort();
 
   const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    try{
-      const response = await axios.post('http://localhost:8000/users/signup/guide',formData)
-      console.log(response.data)
-    }catch(err){
-      console.log(err)
+    setValidationErrors({});
+
+    try {
+      const response = await axios.post('http://localhost:8000/users/signup/guide', formData);
+      console.log(response.data);
+      onClose();
+      setIsSuccessModalOpen(true);
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        if (error.response.status === 400) {
+          const errorData = error.response.data;
+          if (errorData.errors) {
+            setValidationErrors(errorData.errors);
+          } else if (typeof errorData.message === 'string') {
+            setValidationErrors({ general: errorData.message });
+          }
+        }
+      } else {
+        setValidationErrors({ general: 'An unexpected error occurred. Please try again.' });
+      }
     }
+  };
+
+  const getFieldError = (fieldName: string) => {
+    return validationErrors[fieldName];
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
@@ -70,6 +88,14 @@ const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
       ...prev,
       [name]: value
     }));
+    // Clear the error for this field when user starts typing
+    if (validationErrors[name]) {
+      setValidationErrors(prev => {
+        const updated = { ...prev };
+        delete updated[name];
+        return updated;
+      });
+    }
   };
 
   const addLanguage = (): void => {
@@ -89,9 +115,14 @@ const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
     }));
   };
 
+  const handleSuccessClose = () => {
+    setIsSuccessModalOpen(false);
+  };
+
   if (!isOpen) return null;
 
   return (
+    <>
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto">
         <button
@@ -105,8 +136,16 @@ const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
 
         <h2 className="text-2xl font-bold mb-6 text-orange-600">Tour Guide Registration</h2>
 
+        {validationErrors.general && (
+        
+            <CustomAlert message={validationErrors.general} />
+         
+  
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Name Field */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                 Full Name
@@ -118,11 +157,17 @@ const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                  getFieldError('name') ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="Enter your full name"
               />
+              {getFieldError('name') && (
+                <p className="mt-1 text-sm text-red-600">{getFieldError('name')}</p>
+              )}
             </div>
 
+            {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email
@@ -134,11 +179,17 @@ const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                  getFieldError('email') ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="Enter your email"
               />
+              {getFieldError('email') && (
+                <p className="mt-1 text-sm text-red-600">{getFieldError('email')}</p>
+              )}
             </div>
 
+            {/* Phone Number Field */}
             <div>
               <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
                 Phone Number
@@ -150,11 +201,17 @@ const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
                 value={formData.phoneNumber}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                  getFieldError('phoneNumber') ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="Enter your phone number"
               />
+              {getFieldError('phoneNumber') && (
+                <p className="mt-1 text-sm text-red-600">{getFieldError('phoneNumber')}</p>
+              )}
             </div>
 
+            {/* Experience Field */}
             <div>
               <label htmlFor="experience" className="block text-sm font-medium text-gray-700 mb-1">
                 Years of Experience
@@ -167,12 +224,18 @@ const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
                 onChange={handleChange}
                 required
                 min="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                  getFieldError('experience') ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="Years of experience"
               />
+              {getFieldError('experience') && (
+                <p className="mt-1 text-sm text-red-600">{getFieldError('experience')}</p>
+              )}
             </div>
           </div>
 
+          {/* Languages Field */}
           <div>
             <label htmlFor="languageSelect" className="block text-sm font-medium text-gray-700 mb-1">
               Languages
@@ -182,7 +245,9 @@ const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
                 id="languageSelect"
                 value={selectedLanguage}
                 onChange={(e) => setSelectedLanguage(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className={`flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                  getFieldError('languages') ? 'border-red-500' : 'border-gray-300'
+                }`}
               >
                 <option value="">Select a language</option>
                 {availableLanguages
@@ -219,8 +284,12 @@ const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
                 </span>
               ))}
             </div>
+            {getFieldError('languages') && (
+              <p className="mt-1 text-sm text-red-600">{getFieldError('languages')}</p>
+            )}
           </div>
 
+          {/* Specialization Field */}
           <div>
             <label htmlFor="specialization" className="block text-sm font-medium text-gray-700 mb-1">
               Specialization
@@ -231,7 +300,9 @@ const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
               value={formData.specialization}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                getFieldError('specialization') ? 'border-red-500' : 'border-gray-300'
+              }`}
             >
               <option value="">Select specialization</option>
               <option value="cultural">Cultural Tours</option>
@@ -240,8 +311,12 @@ const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
               <option value="nature">Nature Tours</option>
               <option value="food">Food Tours</option>
             </select>
+            {getFieldError('specialization') && (
+              <p className="mt-1 text-sm text-red-600">{getFieldError('specialization')}</p>
+            )}
           </div>
 
+          {/* Password Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
@@ -254,9 +329,14 @@ const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                  getFieldError('password') ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="Enter your password"
               />
+              {getFieldError('password') && (
+                <p className="mt-1 text-sm text-red-600">{getFieldError('password')}</p>
+              )}
             </div>
 
             <div>
@@ -270,9 +350,14 @@ const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
                 value={formData.passwordConfirm}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                  getFieldError('passwordConfirm') ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="Confirm your password"
               />
+              {getFieldError('passwordConfirm') && (
+                <p className="mt-1 text-sm text-red-600">{getFieldError('passwordConfirm')}</p>
+              )}
             </div>
           </div>
 
@@ -285,6 +370,24 @@ const TourGuideModal: React.FC<TourGuideModalProps> = ({ isOpen, onClose }) => {
         </form>
       </div>
     </div>
+
+    {/* Success Modal */}
+    {isSuccessModalOpen && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg w-full max-w-md p-6 text-center shadow-lg">
+          <CheckCircle className="mx-auto text-green-500" size={48} />
+          <h2 className="text-xl font-bold mt-4 text-green-700">Registration Successful!</h2>
+          <p className="text-gray-600 mt-2">You have successfully registered as a tour guide.</p>
+          <button
+            onClick={handleSuccessClose}
+            className="mt-4 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-500"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    )}
+    </>
   );
 };
 
