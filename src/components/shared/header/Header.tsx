@@ -1,16 +1,17 @@
-'use client'
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { ASSETS } from '../../../../public/Assets';
-import { usePathname, useRouter } from 'next/navigation';
-import TourGuideModal from '@/components/ui/TourGuideModal';
-import axios from 'axios';
+"use client";
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { ASSETS } from "../../../../public/Assets";
+import { usePathname, useRouter } from "next/navigation";
+import TourGuideModal from "@/components/ui/TourGuideModal";
+import axios from "axios";
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [userName, setUserName] = useState("");
   const pathname = usePathname();
   const router = useRouter();
 
@@ -20,12 +21,13 @@ function Header() {
     if (token) {
       const getUser = async () => {
         try {
-          const response = await axios.get('http://localhost:8000/users/me', {
+          const response = await axios.get("http://localhost:8000/users/me", {
             headers: {
-              "Authorization": "Bearer " + token,
-            }
+              Authorization: "Bearer " + token,
+            },
           });
           setUserRole(response.data.data.doc.role);
+          setUserName(response.data.data.doc.name || "");
         } catch (error) {
           console.error(error);
           setUserRole(null); // In case of error, set to null
@@ -43,28 +45,39 @@ function Header() {
 
   // Links based on user role
   const Links = [
-    ...(userRole === 'admin' ? [{ name: "Admin Dashboard", link: "/admin/dashboard" }, { name: "Control Panel", link: "/admin/control-panel" }] : []),
-    ...(userRole === 'user' || userRole === null ? [
-      { name: "Home", link: "/" },
-      { name: "Explore", link: "/explore" },
-      { name: "About", link: "/about-us" },
-      { name: "Contact Us", link: "/contact-us" },
-      { name: "Nearby places", link: "/nearby-place" }
-    ] : []),
-    ...(userRole === "guide" ? [{ name: "Guide Dashboard", link: "/guide-dash" }] : []),
-    ...(userRole === "user" ? [{ name: "My Bookings", link: "/my-bookingss" }] : [])
+    ...(userRole === "admin"
+      ? [
+          { name: "Admin Dashboard", link: "/admin/dashboard" },
+          { name: "Control Panel", link: "/admin/control-panel" },
+        ]
+      : []),
+    ...(userRole === "user" || userRole === null
+      ? [
+          { name: "Home", link: "/" },
+          { name: "Explore", link: "/explore" },
+          { name: "About", link: "/about-us" },
+          { name: "Contact Us", link: "/contact-us" },
+          { name: "Nearby places", link: "/nearby-place" },
+        ]
+      : []),
+    ...(userRole === "guide"
+      ? [{ name: "Guide Dashboard", link: "/guide-dash" }]
+      : []),
+    ...(userRole === "user"
+      ? [{ name: "My Bookings", link: "/my-bookings" }]
+      : []),
   ];
 
   // Logout handler
   const logout = () => {
-    localStorage.removeItem('take-travel-token');
-    localStorage.removeItem('take-travel-userId');
+    localStorage.removeItem("take-travel-token");
+    localStorage.removeItem("take-travel-userId");
     setUserRole(null); // Immediately update the state on logout
-    router.push('/');
+    router.push("/");
   };
 
   // If the user is on the '/auth' page, return null to avoid rendering the header
-  if (pathname === '/auth') return null;
+  if (pathname === "/auth") return null;
 
   return (
     <div>
@@ -82,40 +95,46 @@ function Header() {
             <div className="hidden mt-2 mr-4 sm:inline-block">
               <span></span>
             </div>
-            {userRole === 'user' || userRole === null &&
-              <button
-                onClick={() => setIsGuideModalOpen(true)}
-                className="bg-white border-2 border-orange-600 text-orange-600 transition-all hover:ring-4 hover:ring-orange-200 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 focus:outline-none"
-              >
-                Become a Guide
-              </button>}
-            {
-              userRole ? (
+            {userRole === "user" ||
+              (userRole === null && (
+                <button
+                  onClick={() => setIsGuideModalOpen(true)}
+                  className="bg-white border-2 border-orange-600 text-orange-600 transition-all hover:ring-4 hover:ring-orange-200 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 focus:outline-none"
+                >
+                  Become a Guide
+                </button>
+              ))}
+            {userRole && userName ? (
+              <div className="flex items-center gap-3">
                 <div
                   onClick={logout}
-                  className="bg-orange-600 border-2 border-gray-100 text-white transition-all hover:ring-4 hover:ring-orange-400 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none">
+                  className="cursor-pointer bg-orange-600 border-2 border-gray-100 text-white transition-all hover:ring-4 hover:ring-orange-400 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 focus:outline-none"
+                >
                   Logout
                 </div>
-              ) : (
-                <Link
-                  href="/auth"
-                  className="bg-orange-600 border-2 border-gray-100 text-white transition-all hover:ring-4 hover:ring-orange-400 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none"
-                >
-                  Login / Signup
-                </Link>
-              )
-            }
+                <div className="w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-orange-500 text-white font-semibold text-lg shadow-md border-2 border-white hover:scale-105 transition-transform duration-200">
+                  {userName.charAt(0).toUpperCase()}
+                </div>
+              </div>
+            ) : (
+              <Link
+                href="/auth"
+                className="bg-orange-600 border-2 border-gray-100 text-white transition-all hover:ring-4 hover:ring-orange-400 font-medium rounded-3xl text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 focus:outline-none"
+              >
+                Login / Signup
+              </Link>
+            )}
 
             <button
               onClick={toggleMenu}
               type="button"
               className="inline-flex items-center p-2 ml-1 text-sm text-gray-500 rounded-lg lg:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
               aria-controls="mobile-menu-2"
-              aria-expanded={isMenuOpen ? 'true' : 'false'}
+              aria-expanded={isMenuOpen ? "true" : "false"}
             >
               <span className="sr-only">Open main menu</span>
               <svg
-                className={`w-6 h-6 ${isMenuOpen ? 'hidden' : ''}`}
+                className={`w-6 h-6 ${isMenuOpen ? "hidden" : ""}`}
                 fill="currentColor"
                 viewBox="0 0 20 20"
                 xmlns="http://www.w3.org/2000/svg"
@@ -127,7 +146,7 @@ function Header() {
                 ></path>
               </svg>
               <svg
-                className={`w-6 h-6 ${isMenuOpen ? '' : 'hidden'}`}
+                className={`w-6 h-6 ${isMenuOpen ? "" : "hidden"}`}
                 fill="currentColor"
                 viewBox="0 0 20 20"
                 xmlns="http://www.w3.org/2000/svg"
@@ -142,7 +161,7 @@ function Header() {
           </div>
           <div
             className={`${
-              isMenuOpen ? 'block' : 'hidden'
+              isMenuOpen ? "block" : "hidden"
             } items-center justify-between w-full lg:flex lg:w-auto lg:order-1`}
             id="mobile-menu-2"
           >
