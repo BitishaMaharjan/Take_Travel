@@ -72,6 +72,7 @@ const LoginPage = () => {
       else{
         router.push('/')
       }
+    
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Login failed", {
@@ -185,18 +186,14 @@ const LoginPage = () => {
   
       // Construct Full Name (Handle optional middle name)
       const fullName = [firstName, middleName, lastName].filter(Boolean).join(" ");
-  
-      // Send Signup Request
-      const response = await axios.post("http://localhost:8000/users/signup", {
-        name: fullName,
-        email,
-        password,
-        passwordConfirm: confirmPassword,
-        role: "user",
-      });
-  
-      console.log(response);
-  
+
+      if (password === confirmPassword) {
+        
+        const response = await axios.post(
+          "http://localhost:8000/users/signup",
+          { name:firstName + ' '+ middleName+ ' ' + lastName, email, password,role:'user' }
+        );
+        console.log(response);
       toast.success("Account registered. Please check your email to verify your account.", {
         style: { border: "1px solid #713200", padding: "16px" },
       });
@@ -208,6 +205,7 @@ const LoginPage = () => {
       setEmail("");
       setPassword("");
       setConfirmPassword("");
+    }
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Signup failed", {
         style: { border: "1px solid #713200", padding: "16px" },
