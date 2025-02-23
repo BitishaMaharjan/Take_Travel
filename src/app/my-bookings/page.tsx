@@ -60,6 +60,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onViewDetails }) => 
       day: 'numeric'
     });
   };
+  
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -83,7 +84,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onViewDetails }) => 
             <h3 className="text-xl font-semibold mb-2">{booking.packageId.name}</h3>
             <p className="text-gray-600 text-sm mb-2">Booking Ref: {booking.packageId.name}</p>
           </div>
-          <span className="text-lg font-semibold text-orange-600">{booking.packageId.price}</span>
+          <span className="text-lg font-semibold text-green-600">${booking.packageId.price}</span>
         </div>
 
         <div className="space-y-2 mb-4">
@@ -125,6 +126,10 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose }) => 
       day: 'numeric'
     });
   };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Ignore time, compare only dates
+  
+  const isUpcoming = new Date(booking.startDate) >= today;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -141,19 +146,19 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose }) => 
           </div>
 
           <div className="space-y-6">
-            {/* <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <span className="text-gray-600">Booking Reference</span>
-              <span className="font-medium">{booking.}</span>
-            </div> */}
+              <span className="font-medium">{booking.id}</span>
+            </div>
 
-            {/* <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <span className="text-gray-600">Status</span>
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                booking.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                booking.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
               }`}>
-                {booking.paymentStatus === 'paid' ? 'Paid' : 'Payment Pending'}
+                {booking.status === 'completed' ? 'Completed' : 'Upcoming'}
               </span>
-            </div> */}
+            </div>
 
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Total Cost</span>
@@ -169,12 +174,13 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose }) => 
                     {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
                   </span>
                 </div>
-                {/* <div className="flex items-center text-gray-600">
+                <div className="flex items-center text-gray-600">
                   <Clock className="w-4 h-4 mr-2" />
-                  <span>{booking.travelers} Travelers</span>
-                </div> */}
+                  <span>Travelers Name: {booking.userId.name} </span>
+                </div>
               </div>
             </div>
+            
 
             {booking.guideId ? (
   <div className="border-t pt-4">
@@ -183,13 +189,11 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose }) => 
       <div className="flex items-center">
         <User className="w-5 h-5 mr-2 text-gray-600" />
         <span className="font-medium">
-          {booking.guideId.name === undefined ? booking.guideId.name : "Not assigned"}
+        {booking.guideId?.name ? booking.guideId.name : "Not assigned"}
+
         </span>
       </div>
       <div className="space-y-2 text-sm text-gray-600">
-        {/* <p>Languages: {booking.guideId.languages?.join(", ") || "N/A"}</p> */}
-        {/* <p>{booking.guide.experience ? `${booking.guide.experience} years of experience` : "Experience not available"}</p> */}
-        {/* <p>Contact: {booking.guide.contactNumber || "Not available"}</p> */}
       </div>
     </div>
   </div>
@@ -205,19 +209,15 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose }) => 
 
 
 
-            {/* <div className="border-t pt-4">
-              <h4 className="font-medium mb-3">Itinerary Overview</h4>
-              <ul className="space-y-2">
-                {booking.itinerary.map((item, index) => (
-                  <li key={index} className="flex items-start">
-                    <CheckCircle className="w-4 h-4 mr-2 mt-1 text-green-600" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div> */}
+            <div className="border-t pt-4">
+              <h4 className="font-medium mb-3">Duration</h4>
+          <span className='flex flex-column text-lg'>
+                    <Clock className="w-4 h-4 mr-2 mt-1 text-green-600" />
+                   {booking.packageId.duration}
+                  </span>
+            </div>
 
-            {booking.status === 'upcoming' && (
+            {isUpcoming && (
               <div className="border-t pt-4">
                 <div className="bg-blue-50 p-4 rounded-lg flex items-start">
                   <AlertCircle className="w-5 h-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5" />
@@ -256,8 +256,9 @@ const MyBookingsPage: React.FC = () => {
             }
           }
         );
-        console.log(response.data.data.bookings)
-        setData(response.data.data.bookings);
+
+        const bookings: Booking[] = response.data.data.bookings;
+        setData(bookings);
       } catch (error) {
         console.error('Error fetching bookings:', error);
         setError('Failed to load bookings. Please try again later.');
@@ -270,6 +271,12 @@ const MyBookingsPage: React.FC = () => {
     getGuideBookings();
   }, []);
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Ensure we're only comparing dates without time.
+
+  // Filter upcoming and past trips
+  const upcomingTrips = data.filter((booking) => new Date(booking.startDate) >= today);
+  const pastTrips = data.filter((booking) => new Date(booking.endDate) < today);
 
   if (loading) {
     return (
@@ -288,6 +295,8 @@ const MyBookingsPage: React.FC = () => {
       </div>
     );
   }
+
+  const filteredData = activeTab === 'upcoming' ? upcomingTrips : pastTrips;
 
   return (
     <div className="max-w-7xl mx-auto py-12 px-6 lg:px-20">
@@ -316,9 +325,9 @@ const MyBookingsPage: React.FC = () => {
         </button>
       </div>
 
-      {data.length > 0 ? (
+      {filteredData.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {data.map((booking) => (
+          {filteredData.map((booking) => (
             <BookingCard 
               key={booking.id} 
               booking={booking} 
@@ -347,5 +356,6 @@ const MyBookingsPage: React.FC = () => {
     </div>
   );
 };
+
 
 export default MyBookingsPage;

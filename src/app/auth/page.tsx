@@ -194,7 +194,7 @@ const LoginPage = () => {
           { name:firstName + ' '+ middleName+ ' ' + lastName, email, password,role:'user' }
         );
         console.log(response);
-      toast.success("Account registered. Please check your email to verify your account.", {
+      toast.success("Account registered. Please login to continue.", {
         style: { border: "1px solid #713200", padding: "16px" },
       });
   
