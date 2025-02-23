@@ -1,8 +1,14 @@
-
 "use client";
 
-import React from 'react';
-import { Calendar, Clock, MapPin, AlertCircle, CheckCircle, User } from 'lucide-react';
+import React from "react";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  AlertCircle,
+  CheckCircle,
+  User,
+} from "lucide-react";
 
 interface Booking {
   _id: string;
@@ -11,7 +17,7 @@ interface Booking {
   guideId: Guide;
   startDate: string;
   endDate: string;
-  status: string;  // Adjust based on possible statuses
+  status: string; // Adjust based on possible statuses
   totalPrice: number;
   createdAt: string;
   updatedAt: string;
@@ -54,25 +60,28 @@ interface BookingCardProps {
   onViewDetails: (booking: Booking) => void;
 }
 
-export const BookingCard: React.FC<BookingCardProps> = ({ booking, onViewDetails }) => {
+export const BookingCard: React.FC<BookingCardProps> = ({
+  booking,
+  onViewDetails,
+}) => {
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      case 'upcoming':
-        return 'bg-blue-100 text-blue-800';
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      case "upcoming":
+        return "bg-blue-100 text-blue-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -84,18 +93,21 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking, onViewDetails
           alt={booking.packageId.name}
           className="w-full h-48 object-cover"
         />
-        <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
-          {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-        </div>
       </div>
-      
+
       <div className="p-6">
         <div className="flex justify-between items-start mb-4">
           <div>
-            <h3 className="text-xl font-semibold mb-2">{booking.packageId.name}</h3>
-            <p className="text-gray-600 text-sm mb-2">Booking ID: {booking.id}</p>
+            <h3 className="text-xl font-semibold mb-2">
+              {booking.packageId.name}
+            </h3>
+            <p className="text-gray-600 text-sm mb-2">
+              Booking ID: {booking.id}
+            </p>
           </div>
-          <span className="text-lg font-semibold text-orange-600">${booking.totalPrice}</span>
+          <span className="text-lg font-semibold text-orange-600">
+            ${booking.totalPrice}
+          </span>
         </div>
 
         <div className="space-y-2 mb-4">
@@ -107,7 +119,9 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking, onViewDetails
           </div>
           <div className="flex items-center text-gray-600">
             <Clock className="w-4 h-4 mr-2" />
-            <span className="text-sm">Duration: {booking.packageId.duration} days</span>
+            <span className="text-sm">
+              Duration: {booking.packageId.duration} days
+            </span>
           </div>
           <div className="flex items-center text-gray-600">
             <User className="w-4 h-4 mr-2" />
@@ -126,14 +140,26 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking, onViewDetails
   );
 };
 
-export const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose }) => {
+export const BookingDetails: React.FC<BookingDetailsProps> = ({
+  booking,
+  onClose,
+}) => {
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Remove time for accurate date comparison
+
+  // Convert startDate to Date object
+  const startDate = new Date(booking.startDate);
+  startDate.setHours(0, 0, 0, 0); // Remove time for accurate comparison
+
+  // Determine if the booking is upcoming
+  const isUpcoming = startDate > today;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -151,22 +177,28 @@ export const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose
 
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <span className="text-gray-600">Booking Reference</span>
-              <span className="font-medium">{booking.id}</span>
+              <span className="text-gray-600">package Reference</span>
+              <span className="font-medium">{booking.packageId.id}</span>
             </div>
 
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Status</span>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                booking.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-              }`}>
-                {booking.status === 'paid' ? 'Paid' : 'Payment Pending'}
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  booking.status === "paid"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-yellow-100 text-yellow-800"
+                }`}
+              >
+                {isUpcoming ? "Upcoming" : "Completed"}
               </span>
             </div>
 
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Total Cost</span>
-              <span className="font-medium text-orange-600">{booking.totalPrice}</span>
+              <span className="font-medium text-orange-600">
+                {booking.totalPrice}
+              </span>
             </div>
 
             <div className="border-t pt-4">
@@ -175,7 +207,8 @@ export const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose
                 <div className="flex items-center text-gray-600">
                   <Calendar className="w-4 h-4 mr-2" />
                   <span>
-                    {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
+                    {formatDate(booking.startDate)} -{" "}
+                    {formatDate(booking.endDate)}
                   </span>
                 </div>
                 <div className="flex items-center text-gray-600">
@@ -185,42 +218,35 @@ export const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose
               </div>
             </div>
 
-            {booking.guideId && (
+            {booking.userId && (
               <div className="border-t pt-4">
-                <h4 className="font-medium mb-3">Your Guide</h4>
+                <h4 className="font-medium mb-3">Your Customer</h4>
                 <div className="bg-gray-50 p-4 rounded-lg space-y-3">
                   <div className="flex items-center">
                     <User className="w-5 h-5 mr-2 text-gray-600" />
-                    {/* <span className="font-medium">{booking.guideId}</span> */}
+                    <span className="font-medium">
+                      Customer name: {booking.userId.name}
+                    </span>
                   </div>
-                  {/* <div className="space-y-2 text-sm text-gray-600">
-                    <p>Languages: {booking.guide.languages.join(", ")}</p>
-                    <p>{booking.guide.experience} years of experience</p>
-                    <p>Contact: {booking.guide.contactNumber}</p>
-                  </div> */}
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <p>Customer email: {booking.userId.email} </p>
+                  </div>
                 </div>
               </div>
             )}
 
-            <div className="border-t pt-4">
-              <h4 className="font-medium mb-3">Itinerary Overview</h4>
-              <ul className="space-y-2">
-                {/* {booking.itinerary.map((item, index) => (
-                  <li key={index} className="flex items-start">
-                    <CheckCircle className="w-4 h-4 mr-2 mt-1 text-green-600" />
-                    <span>{item}</span>
-                  </li>
-                ))} */}
-              </ul>
-            </div>
-
-            {booking.status === 'upcoming' && (
+            {isUpcoming && (
               <div className="border-t pt-4">
                 <div className="bg-blue-50 p-4 rounded-lg flex items-start">
                   <AlertCircle className="w-5 h-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-blue-800">
-                    Your trip is coming up! Make sure to check your email for important travel documents and pre-departure information.
-                    {booking.guideId && " Your guide will contact you 48 hours before the trip starts."}
+                    You have an upcoming trip starting on{" "}
+                    <strong>{formatDate(booking.startDate)}</strong> for the
+                    package <strong>'{booking.packageId.name}'</strong>. Please
+                    contact <strong>{booking.userId.name}</strong> at{" "}
+                    <strong>{booking.userId.email}</strong> at least 48 hours
+                    before departure to confirm details. Ensure all preparations
+                    are made for a smooth experience.
                   </p>
                 </div>
               </div>

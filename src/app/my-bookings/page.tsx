@@ -154,9 +154,9 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose }) => 
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Status</span>
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                booking.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                isUpcoming ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
               }`}>
-                {booking.status === 'completed' ? 'Completed' : 'Upcoming'}
+                {isUpcoming ? 'Upcoming' : 'Completed'}
               </span>
             </div>
 
